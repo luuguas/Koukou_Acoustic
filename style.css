@@ -152,6 +152,10 @@ button {
     background-image: url(image/Cracker_Disabled.svg);
 }
 
+#se .container {
+    width: 313px;
+}
+
 #se .discription {
     height: 20px;
     width: 100%;

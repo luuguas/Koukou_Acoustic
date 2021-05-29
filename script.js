@@ -88,7 +88,28 @@ function changeSeekBarByCursor(e, player, playingWidth, duration) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('JavaScript is running.');
+    console.log('JavaScript(script.js) is running.');
+
+    //playerを追加
+    new Vue({
+        el: '#bgm',
+        data: {
+            players: [
+                { src: 'music/BGM/Magnamalo OST.mp3' },
+                { src: 'music/BGM/焦りは禁物.mp3' }
+            ]
+        }
+    });
+    new Vue({
+        el: '#se',
+        data: {
+            players: [
+                { src: 'music/SE/アスファルトの上を走る1.mp3' },
+                { src: 'music/SE/超高速ダッシュ.mp3' },
+                { src: 'music/SE/鳩時計1.mp3' }
+            ]
+        }
+    })
 
     //bgmに再生中のplayerのタグ及びドラッグ中のシークバーのタグを付与
     var bgm = document.getElementById('bgm');

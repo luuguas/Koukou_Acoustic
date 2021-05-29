@@ -6,6 +6,8 @@
     <title>仮装 - 音響機材</title>
     <link href="lib/reset.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
+    <script type="text/javascript" src="lib/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="lib/vue.js"></script>
     <script type="text/javascript" src="script.js"></script>
 </head>
 
@@ -14,50 +16,8 @@
         <h2>BGM</h2>
         <div class="panels">
 
-            <div class="player">
-                <audio src="music/BGM/Magnamalo OST.mp3" preload="metadata"></audio>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title"></label>
-                    </div>
-                    <div class="controller">
-                        <div class="time">
-                            <label class="time-current">00:00</label>
-                            <label class="time-div">/</label>
-                            <label class="time-duration">--:--</label>
-                        </div>
-                        <div class="seekbar">
-                            <div class="seekbar-played"></div>
-                            <div class="seekbar-playing"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="player">
-                <audio src="music/BGM/ファンタジー12.mp3" preload="metadata"></audio>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title"></label>
-                    </div>
-                    <div class="controller">
-                        <div class="time">
-                            <label class="time-current">00:00</label>
-                            <label class="time-div">/</label>
-                            <label class="time-duration">--:--</label>
-                        </div>
-                        <div class="seekbar">
-                            <div class="seekbar-played"></div>
-                            <div class="seekbar-playing"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="player">
-                <audio src="music/BGM/焦りは禁物.mp3" preload="metadata"></audio>
+            <div class="player" v-for="p in players">
+                <audio :src="p.src" preload="metadata"></audio>
                 <button type="button"></button>
                 <div class="container">
                     <div class="discription">
@@ -85,69 +45,9 @@
         <h2>SE</h2>
         <div class="panels">
 
-            <div class="player">
+            <div class="player" v-for="p in players">
                 <div class="audios">
-                    <audio src="music/SE/アスファルトの上を走る1(Short).mp3" preload="metadata"></audio>
-                </div>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title"></label>
-                    </div>
-                </div>
-            </div>
-            <div class="player">
-                <div class="audios">
-                    <audio src="music/SE/鳩時計1.mp3" preload="metadata"></audio>
-                </div>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title"></label>
-                    </div>
-                </div>
-            </div>
-            <div class="player">
-                <div class="audios">
-                    <audio src="music/SE/ショック4.mp3" preload="metadata"></audio>
-                </div>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title"></label>
-                    </div>
-                </div>
-            </div>
-            <div class="player">
-                <div class="audios">
-                    <audio src="music/SE/超高速ダッシュ.mp3" preload="metadata"></audio>
-                </div>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title"></label>
-                    </div>
-                </div>
-            </div>
-            <div class="player">
-                <div class="audios">
-                    <audio src="music/SE/引き戸を開ける2.mp3" preload="metadata"></audio>
-                </div>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title"></label>
-                    </div>
-                </div>
-            </div>
-            <div class="player">
-                <div class="audios">
-                    <audio src="music/SE/キーボードの早打ち2.mp3" preload="metadata"></audio>
+                    <audio :src="p.src" preload="metadata"></audio>
                 </div>
                 <button type="button"></button>
                 <div class="container">
