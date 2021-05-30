@@ -30,6 +30,7 @@ h2 {
     
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 button {
     height: 50px;
@@ -142,13 +143,16 @@ button {
     background-color: var(--pale-green);
 }
 
-#se button {
+#se .play {
+    height: 50px;
+}
+#se .play button {
     background-image: url(image/Cracker.svg);
 }
-#se button.playing {
+#se .play button.playing {
     background-image: url(image/Cracker_Playing.svg);
 }
-#se button.playing:disabled {
+#se .play button.playing:disabled {
     background-image: url(image/Cracker_Disabled.svg);
 }
 
@@ -174,4 +178,20 @@ button {
     font-size: 1.0rem;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+#se .cancel {
+    height: 30px;
+    display: flex;
+    flex-direction: row;
+}
+
+#se .cancel button {
+    height: 30px;
+    width: 30px;
+    margin: 0px 3px;
+    padding: 2px;
+    background-image: url(image/Stop.svg);
+    background-position: center center;
+    background-size: contain;
 }

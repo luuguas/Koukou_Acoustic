@@ -95,8 +95,9 @@ document.addEventListener('DOMContentLoaded', function () {
         el: '#bgm',
         data: {
             players: [
-                { src: 'music/BGM/Magnamalo OST.mp3' },
-                { src: 'music/BGM/焦りは禁物.mp3' }
+                { src: 'music/BGM/BGM日常現代.mp3' },
+                { src: 'music/BGM/BGM平安.mp3' },
+                { src: 'music/BGM/BGM平安貴族.mp3' },
             ]
         }
     });
@@ -104,17 +105,22 @@ document.addEventListener('DOMContentLoaded', function () {
         el: '#se',
         data: {
             players: [
-                { src: 'music/SE/アスファルトの上を走る1.mp3' },
-                { src: 'music/SE/超高速ダッシュ.mp3' },
-                { src: 'music/SE/鳩時計1.mp3' }
+                { src: 'music/SE/スマホのタップ音.mp3' },
+                { src: 'music/SE/アラーム.mp3' },
+                { src: 'music/SE/突然の起床.mp3' },
+                { src: 'music/SE/アスファルトを走る(20歩).mp3' },
+                { src: 'music/SE/車に轢かれる.mp3' },
+                { src: 'music/SE/タイムスリップ.mp3' },
+                { src: 'music/SE/笛.mp3' },
+                { src: 'music/SE/きらきら輝く2.mp3' },
+                { src: 'music/SE/馬が走る1.mp3' },
             ]
         }
     })
 
     //bgmに再生中のplayerのタグ及びドラッグ中のシークバーのタグを付与
-    var bgm = document.getElementById('bgm');
-    bgm.setAttribute('playing-audio', 'none');
-    bgm.setAttribute('dragging-seekbar', 'none');
+    $('#bgm').attr('playing-audio', 'none');
+    $('#bgm').attr('dragging-seekbar', 'none');
 
     //bgm内の各playerに機能を追加
     var bgmPlayers = bgm.getElementsByClassName('player');
@@ -326,6 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /* 再生ボタンの機能 */
         button.addEventListener('click', {
+            cancel: player.getElementsByClassName('cancel')[0],
             button: button,
             audios: audiosClass.getElementsByTagName('audio'),
             handleEvent: function () {
@@ -334,7 +341,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 for (var j = 0; j < this.audios.length; ++j) {
                     if (this.audios[j].paused) {
                         //audioを再生
+                        this.audios[j].currentTime = 0;
                         this.audios[j].play();
+
+                        //cancelボタンを追加
+                        var cancelButton = document.createElement('button');
+                        cancelButton.classList.add('cancel-' + j);
+                        cancelButton.addEventListener('click', {
+                            audio: this.audios[j],
+                            cancel: this.cancel,
+                            button: cancelButton,
+                            handleEvent: function () {
+                                //endedイベントを発火
+                                this.audio.currentTime = this.audio.duration;
+                            }
+                        })
+                        this.cancel.appendChild(cancelButton);
+
                         //再生中のaudioの個数を1増やす
                         this.button.setAttribute('playing-num', parseInt(this.button.getAttribute('playing-num')) + 1);
                         //ボタン操作可能の切替
@@ -352,10 +375,17 @@ document.addEventListener('DOMContentLoaded', function () {
         /* audioの再生が終了したときの処理 */
         for (var j = 0; j < audios.length; ++j) {
             var audio = audios[j];
+            audio.setAttribute('index', 'cancel-' + j);
             audio.addEventListener('ended', {
+                player: player,
                 button: button,
                 audio: audio,
                 handleEvent: function () {
+                    //cancelボタンを削除
+                    var cancel = this.player.getElementsByClassName('cancel')[0];
+                    var cancelButton = this.player.getElementsByClassName(this.audio.getAttribute('index'))[0];
+                    cancel.removeChild(cancelButton);
+
                     //再生中のaudioの個数を1減らす
                     this.button.setAttribute('playing-num', parseInt(this.button.getAttribute('playing-num')) - 1);
                     //フラグ切り替え
