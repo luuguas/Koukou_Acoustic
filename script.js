@@ -95,9 +95,9 @@ document.addEventListener('DOMContentLoaded', function () {
         el: '#bgm',
         data: {
             players: [
-                { src: 'music/BGM/BGM日常現代.mp3' },
                 { src: 'music/BGM/BGM平安.mp3' },
                 { src: 'music/BGM/BGM平安貴族.mp3' },
+                { src: 'music/BGM/BGM日常現代.mp3' },
             ]
         }
     });
@@ -110,10 +110,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 { src: 'music/SE/突然の起床.mp3' },
                 { src: 'music/SE/アスファルトを走る(20歩).mp3' },
                 { src: 'music/SE/車に轢かれる.mp3' },
+                { src: 'music/SE/車の走行音.mp3' },
                 { src: 'music/SE/タイムスリップ.mp3' },
+                { src: 'music/SE/喧嘩.mp3' },
                 { src: 'music/SE/笛.mp3' },
                 { src: 'music/SE/きらきら輝く2.mp3' },
                 { src: 'music/SE/馬が走る1.mp3' },
+                { src: 'music/SE/車・急ブレーキ02.mp3' },
             ]
         }
     })
@@ -349,8 +352,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         cancelButton.classList.add('cancel-' + j);
                         cancelButton.addEventListener('click', {
                             audio: this.audios[j],
-                            cancel: this.cancel,
-                            button: cancelButton,
                             handleEvent: function () {
                                 //endedイベントを発火
                                 this.audio.currentTime = this.audio.duration;
