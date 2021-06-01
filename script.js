@@ -2,14 +2,13 @@
 const fadeOut = 1000;
 const seekBar_PlayingWidth = 10;
 
-function changeButtonDisabled(buttons, disabled) {
-    for (var i = 0; i < buttons.length; ++i) {
-        buttons[i].disabled = disabled;
-    }
-}
-function toggleClass(element, before, after) {
-    element.classList.remove(before);
-    element.classList.add(after);
+//グローバル変数
+let bgmPlayingPlayer;
+let seDraggingSeekBar;
+
+function toggleClass(elem, before, after) {
+    $(elem).removeClass(before);
+    $(elem).addClass(after);
 }
 
 function displayTime(time) {
@@ -88,7 +87,7 @@ function changeSeekBarByCursor(e, player, playingWidth, duration) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('JavaScript(script.js) is running.');
+    console.log('JavaScript file (script.js) is running.');
 
     //playerを追加
     new Vue({
@@ -122,12 +121,81 @@ document.addEventListener('DOMContentLoaded', function () {
     })
 
     //bgmに再生中のplayerのタグ及びドラッグ中のシークバーのタグを付与
-    $('#bgm').attr('playing-audio', 'none');
-    $('#bgm').attr('dragging-seekbar', 'none');
+    bgmPlayingPlayer = null;
+    seDraggingSeekBar = null;
 
     //bgm内の各playerに機能を追加
-    var bgmPlayers = bgm.getElementsByClassName('player');
-    var bgmButtons = bgm.getElementsByTagName('button');
+
+    $('#bgm .player').each(function (ind) {
+        /* 再生・一時停止ボタンの機能 */
+        let button = $(this).children('button');
+        
+        $(button).addClass('pausing');
+        let args = { player: this };
+        $(button).click(args, function (e) {
+            let player = e.data.player;
+            if ($(this).hasClass('playing')) { //同一player内のaudioが再生中
+                //buttonを選択不可にする
+                $('#bgm button').attr('disabled', true);
+                toggleClass(this, 'playing', 'fading');
+
+                //audioの音量をフェードアウト
+                let fadeVolume = setInterval(function (button, audio, startTime, duration) {
+                    let now = Date.now();
+                    if (now - startTime > duration) {
+                        clearInterval(fadeVolume);
+                        //再生中のaudioを停止
+                        $(audio)[0].pause();
+                        $(audio)[0].volume = 1.0;
+                        toggleClass(button, 'fading', 'pausing');
+                        bgmPlayingPlayer = null;
+                        //buttonを選択可にする
+                        $('#bgm button').attr('disabled', false);
+                    }
+                    else {
+                        $(audio)[0].volume = (startTime + duration - now) / duration;
+                    }
+                }, 20,
+                    this, $(player).children(audio), Date.now(), fadeOut);
+            }
+            else if (bgmPlayingPlayer !== null) { //他のplayer内のaudioが再生中
+                //buttonを選択不可にする
+                $('#bgm button').attr('disabled', true);
+                toggleClass($(bgmPlayingPlayer).children('button'), 'playing', '');
+
+                //audioの音量をフェードアウト
+                let fadeVolume = setInterval(function (playingPlayer, myPlayer, startTime, duration) {
+                    let now = Date.now();
+                    let playingButton = $(playingPlayer).children('button');
+                    let playingAudio = $(playingPlayer).children('audio');
+                    if (now - startTime > duration) {
+                        clearInterval(fadeVolume);
+                        //再生中のaudioを停止
+                        $(playingAudio)[0].pause();
+                        $(playingAudio)[0].volume = 1.0;
+                        toggleClass(playingButton, 'fading', 'pausing');
+                        //自分のaudioを再生
+                        $(myPlayer).children('audio')[0].play();
+                        toggleClass($(myPlayer).children('button'), 'pausing', 'playing');
+                        bgmPlayingPlayer = myPlayer;
+                        //buttonを選択可にする
+                        $('#bgm button').attr('disabled', false);
+                    }
+                    else {
+                        $(playingAudio)[0].volume = (startTime + duration - now) / duration;
+                    }
+                }, 20,
+                    bgmPlayingPlayer, player, Date.now(), fadeOut);
+            }
+            else { //どのaudioも再生していない
+                $(player).children('audio')[0].play();
+                toggleClass(this, 'pausing', 'playing');
+                bgmPlayingPlayer = player;
+            }
+        });
+    });
+
+    return;
     for (var i = 0; i < bgmPlayers.length; ++i) {
         var tag = 'bgm-' + i;
         var player = bgmPlayers[i];
@@ -135,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
         //playerに識別タグを追加
         player.classList.add(tag);
 
-        /* 再生・一時停止ボタンの機能 */
+        // 再生・一時停止ボタンの機能 
         var button = player.getElementsByTagName('button')[0];
         button.setAttribute('index', tag);
         button.classList.add('pausing');
@@ -218,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        /* 再生中のplayerのシークバーの動作 */
+        // 再生中のplayerのシークバーの動作 
         var audio = player.getElementsByTagName('audio')[0];
         audio.load();
         audio.addEventListener('timeupdate', {
@@ -228,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        /* 再生終了時のbuttonの動作 */
+        // 再生終了時のbuttonの動作 
         audio.addEventListener('ended', {
             button: button,
             bgm: bgm,
@@ -240,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
 
-        /* シークバーを操作した時の動作 */
+        // シークバーを操作した時の動作 
         var seekBar = player.getElementsByClassName('seekbar')[0];
         seekBar.setAttribute('index', tag);
         //シークバーを押した時
@@ -282,17 +350,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
 
-        /* 時間表示の初期化(動画の長さは後で読み込む) */
+        // 時間表示の初期化(動画の長さは後で読み込む) 
         var timeCurrent = player.getElementsByClassName('time-current')[0];
         timeCurrent.textContent = displayTime(0);
 
-        /* ファイル名を表示 */
+        // ファイル名を表示 
         var title = player.getElementsByClassName('title')[0];
         var reg = /[^\/]+$/;
         title.textContent = audio.getAttribute('src').match(reg);
     }
 
-    /* 動画の長さを表示 */
+    // 動画の長さを表示 
     var audios = bgm.getElementsByTagName('audio');
     var timeDurations = bgm.getElementsByClassName('time-duration');
     var loadDuration = setInterval(function (audios, timeDurations) {
@@ -333,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
         button.classList.add('pausing');
         button.setAttribute('playing-num', '0');
 
-        /* 再生ボタンの機能 */
+        // 再生ボタンの機能 
         button.addEventListener('click', {
             cancel: player.getElementsByClassName('cancel')[0],
             button: button,
@@ -373,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         var audios = audiosClass.getElementsByTagName('audio');
-        /* audioの再生が終了したときの処理 */
+        // audioの再生が終了したときの処理 
         for (var j = 0; j < audios.length; ++j) {
             var audio = audios[j];
             audio.setAttribute('index', 'cancel-' + j);
@@ -401,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        /* ファイル名を表示 */
+        // ファイル名を表示 
         var title = player.getElementsByClassName('title')[0];
         var reg = /[^\/]+$/;
         title.textContent = firstAudio.getAttribute('src').match(reg);
