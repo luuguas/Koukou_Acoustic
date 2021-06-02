@@ -15,14 +15,13 @@
     <div id="bgm">
         <h2>BGM</h2>
         <div class="panels">
-
-            <div class="player" v-for="p in players">
-                <audio :src="p.src" preload="metadata"></audio>
+            <div class="player" v-for="fileName in fileNames">
+                <audio :src="src(fileName)" preload="metadata"></audio>
                 <button type="button"></button>
                 <div class="container">
                     <div class="discription">
                         <div class="note"></div>
-                        <label class="title"></label>
+                        <label class="title" v-cloak>{{ fileName }}</label>
                     </div>
                     <div class="controller">
                         <div class="time">
@@ -37,17 +36,14 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
-
     <div id="se">
         <h2>SE</h2>
         <div class="panels">
-
-            <div class="player" v-for="p in players">
+            <div class="player" v-for="fileName in fileNames">
                 <div class="audios">
-                    <audio :src="p.src" preload="metadata"></audio>
+                    <audio :src="src(fileName)" preload="metadata"></audio>
                 </div>
                 <div class="play">
                     <button type="button"></button>
@@ -55,13 +51,12 @@
                 <div class="container">
                     <div class="discription">
                         <div class="note"></div>
-                        <label class="title"></label>
+                        <label class="title" v-cloak>{{ fileName }}</label>
                     </div>
                     <div class="cancel">
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </body>
