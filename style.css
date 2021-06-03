@@ -141,7 +141,7 @@ button {
 }
 
 #se .player {
-    width: 400px;
+    width: 300px;
     border-color: var(--green);
     background-color: var(--pale-green);
 }
