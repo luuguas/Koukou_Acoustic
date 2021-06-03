@@ -141,7 +141,7 @@ button {
 }
 
 #se .player {
-    width: 300px;
+    width: 350px;
     border-color: var(--green);
     background-color: var(--pale-green);
 }
@@ -160,7 +160,7 @@ button {
 }
 
 #se .container {
-    width: 313px;
+    width: 263px;
 }
 
 #se .discription {
