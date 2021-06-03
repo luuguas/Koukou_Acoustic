@@ -5,6 +5,7 @@ const playingWidth = 10;
 //グローバル変数
 let bgmPlayingPlayer;
 let seDraggingPlayer;
+let args;
 
 function toggleClass(elem, before, after) {
     $(elem).removeClass(before);
@@ -134,7 +135,7 @@ $(document).ready(function () {
         /* 再生・一時停止ボタンの機能 */
         let button = $(this).children('button');
         $(button).addClass('pausing');
-        let args = { player: this };
+        args = { player: this };
         $(button).click(args, function (e) {
             let player = e.data.player;
             if ($(this).hasClass('playing')) { //同一player内のaudioが再生中
@@ -158,13 +159,12 @@ $(document).ready(function () {
                         $(audio)[0].volume = (startTime + duration - now) / duration;
                     }
                 }, 50,
-                    this, $(player).children(audio), Date.now(), fadeOut);
+                    this, $(player).children('audio'), Date.now(), fadeOut);
             }
             else if (bgmPlayingPlayer !== null) { //他のplayer内のaudioが再生中
                 //buttonを選択不可にする
                 toggleClass($(bgmPlayingPlayer).children('button'), 'playing', 'fading');
                 $('#bgm button').attr('disabled', true);
-
 
                 //audioの音量をフェードアウト
                 let fadeVolume = setInterval(function (playingPlayer, myPlayer, startTime, duration) {
@@ -247,100 +247,63 @@ $(document).ready(function () {
             this);
     });
 
-    return;
-
-    var se = document.getElementById('se');
     //seの各playerに機能を追加
-    var sePlayers = se.getElementsByClassName('player');
-    for (var i = 0; i < sePlayers.length; ++i) {
-        var player = sePlayers[i];
-        var button = player.getElementsByTagName('button')[0];
-        var audiosClass = player.getElementsByClassName('audios')[0];
-        var firstAudio = player.getElementsByTagName('audio')[0];
-
+    $('#se .player').each(function () {
         //audioを複製
-        for (var j = 0; j < 4; ++j) {
-            var appendAudio = document.createElement('audio');
-            appendAudio.src = firstAudio.src;
-            appendAudio.preload = 'metadata';
-            audiosClass.appendChild(appendAudio);
+        $(this).find('audio:first').attr('index', 'cancel-0');
+        for (let i = 1; i < 5; ++i) {
+            $(this).children('.audios').append($(this).find('audio:first').clone(true));
+            $(this).find('audio').eq(i).attr('index', 'cancel-' + i);
         }
 
-        //ボタンにフラグを追加
-        button.classList.add('pausing');
-        button.setAttribute('playing-num', '0');
+        /* 再生が終了した時の処理 */
+        args = { player: this };
+        $(this).find('audio').on('ended', args, function (e) {
+            //cancelボタンを削除
+            $(e.data.player).find('.cancel button').remove('.' + $(this).attr('index'));
+            //再生中のaudioの個数を1減らす
+            let button = $(e.data.player).find('.play button');
+            $(button).attr('playing-num', parseInt($(button).attr('playing-num')) - 1);
 
-        // 再生ボタンの機能 
-        button.addEventListener('click', {
-            cancel: player.getElementsByClassName('cancel')[0],
-            button: button,
-            audios: audiosClass.getElementsByTagName('audio'),
-            handleEvent: function () {
-                //フラグ切り替え
-                toggleClass(this.button, 'pausing', 'playing');
-                for (var j = 0; j < this.audios.length; ++j) {
-                    if (this.audios[j].paused) {
-                        //audioを再生
-                        this.audios[j].currentTime = 0;
-                        this.audios[j].play();
+            //発火ボタンの状態を変更
+            if ($(button).attr('playing-num') === '0')
+                toggleClass(button, 'playing', 'pausing');
+            if (parseInt($(button).attr('playing-num')) < 5)
+                $(button).attr('disabled', false);
+        });
 
-                        //cancelボタンを追加
-                        var cancelButton = document.createElement('button');
-                        cancelButton.classList.add('cancel-' + j);
-                        cancelButton.addEventListener('click', {
-                            audio: this.audios[j],
-                            handleEvent: function () {
-                                //endedイベントを発火
-                                this.audio.currentTime = this.audio.duration;
-                            }
-                        })
-                        this.cancel.appendChild(cancelButton);
+        /* 発火ボタンの機能 */
+        let button = $(this).find('.play button');
+        $(button).attr('playing-num', '0');
+        $(button).addClass('pausing');
+        args = { player: this };
+        $(button).click(args, function (e) {
+            let audios = $(e.data.player).find('audio');
+            for (let i = 0; i < 5; ++i) {
+                if ($(audios).eq(i).prop('paused')) {
+                    let audio = $(audios).eq(i);
+                    //audioを再生
+                    $(audio).prop('currentTime', 0.0);
+                    audio[0].play();
+                    //cancelボタンを追加
+                    let cancelButton = $('<button>', { class: 'cancel-' + i });
+                    args = { audio: audio };
+                    $(cancelButton).click(args, function (e) {
+                        //endedイベントを発火
+                        $(e.data.audio).prop('currentTime', $(e.data.audio).prop('duration'));
+                    });
+                    $(e.data.player).find('.cancel').append(cancelButton);
 
-                        //再生中のaudioの個数を1増やす
-                        this.button.setAttribute('playing-num', parseInt(this.button.getAttribute('playing-num')) + 1);
-                        //ボタン操作可能の切替
-                        if (parseInt(this.button.getAttribute('playing-num')) < 5)
-                            this.button.disabled = false;
-                        else
-                            this.button.disabled = true;
-                        return;
-                    }
+                    //再生中のaudioの個数を1増やす
+                    $(this).attr('playing-num', parseInt($(this).attr('playing-num')) + 1);
+                    //発火ボタンの状態を変更
+                    toggleClass(this, 'pausing', 'playing');
+                    if (parseInt($(this).attr('playing-num')) === 5)
+                        $(this).attr('disabled', true);
+
+                    return;
                 }
             }
         });
-
-        var audios = audiosClass.getElementsByTagName('audio');
-        // audioの再生が終了したときの処理 
-        for (var j = 0; j < audios.length; ++j) {
-            var audio = audios[j];
-            audio.setAttribute('index', 'cancel-' + j);
-            audio.addEventListener('ended', {
-                player: player,
-                button: button,
-                audio: audio,
-                handleEvent: function () {
-                    //cancelボタンを削除
-                    var cancel = this.player.getElementsByClassName('cancel')[0];
-                    var cancelButton = this.player.getElementsByClassName(this.audio.getAttribute('index'))[0];
-                    cancel.removeChild(cancelButton);
-
-                    //再生中のaudioの個数を1減らす
-                    this.button.setAttribute('playing-num', parseInt(this.button.getAttribute('playing-num')) - 1);
-                    //フラグ切り替え
-                    if (parseInt(this.button.getAttribute('playing-num')) === 0)
-                        toggleClass(this.button, 'playing', 'pausing');
-                    //ボタン操作可能の切替
-                    if (parseInt(this.button.getAttribute('playing-num')) < 5)
-                        this.button.disabled = false;
-                    else
-                        this.button.disabled = true;
-                }
-            });
-        }
-
-        // ファイル名を表示 
-        var title = player.getElementsByClassName('title')[0];
-        var reg = /[^\/]+$/;
-        title.textContent = firstAudio.getAttribute('src').match(reg);
-    }
+    });
 });
