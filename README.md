@@ -8,6 +8,14 @@ Web Application of Acoustic Equipment for Play
 劇で使える音響用のWebアプリ 
 
 # 使い方
+
+## ダウンロード
+[Releasesページ](https://github.com/luuguas/Koukou_Acoustic/releases)に移動し、Assets内の Source Code (zip) をクリックすると圧縮ファイルがダウンロードされるので、解凍してください。
+
+[ここ](https://github.com/luuguas/Koukou_Acoustic/archive/refs/tags/v1.1.0.zip)から直接ダウンロードもできます。
+
+![download](https://user-images.githubusercontent.com/69027878/120668504-7c6e3500-c4c9-11eb-93ba-4c1cb168bda7.png)
+
 ## 起動
 index.htmlをブラウザで開きます。
 
