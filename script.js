@@ -91,7 +91,7 @@ $(document).ready(function () {
                 'タイムスリップ.mp3',
                 'BGM平安2.mp3',
                 'BGM平安貴族.mp3',
-                'Black Magic1.mp3',
+                'Black Magic2.mp3',
                 'BGM日常現代.mp3',
             ]
         },
@@ -113,7 +113,7 @@ $(document).ready(function () {
                 '喧嘩.mp3',
                 'スマホ破壊音.mp3',
                 'ショック.mp3',
-                'ひらめく.mp3',
+                '思いつく1.mp3',
                 '羽子板3.mp3',
                 '笛.mp3',
                 '笛2.mp3',
