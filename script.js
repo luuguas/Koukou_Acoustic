@@ -88,7 +88,7 @@ $(document).ready(function () {
         el: '#bgm',
         data: {
             fileNames: [
-                'タイムスリップ.mp3',
+                'BGMタイムスリップ1.mp3',
                 'BGM平安2.mp3',
                 'BGM平安貴族.mp3',
                 'Black Magic2.mp3',
@@ -110,8 +110,8 @@ $(document).ready(function () {
                 'ドア現代.mp3',
                 '走る.mp3',
                 '自動車事故.mp3',
-                '喧嘩.mp3',
                 'スマホ破壊音.mp3',
+                '喧嘩.mp3',
                 'ショック.mp3',
                 '思いつく1.mp3',
                 '羽子板3.mp3',
@@ -119,9 +119,11 @@ $(document).ready(function () {
                 '笛2.mp3',
                 '開門.mp3',
                 'きらきら輝く2.mp3',
+                '馬のいななき.mp3',
                 '馬が走る1.mp3',
-                '馬と衝突.mp3',
+                '馬と衝突1.mp3',
                 '車の走行音.mp3',
+                'スマホ破壊音.mp3',
             ]
         },
         methods: {
