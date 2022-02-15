@@ -87,7 +87,7 @@ $(document).ready(function () {
     new Vue({
         el: '#bgm',
         data: {
-            fileNames: [
+            fileList: [
                 'BGMタイムスリップ1.mp3',
                 'BGM平安2.mp3',
                 'BGM平安貴族.mp3',
@@ -95,16 +95,18 @@ $(document).ready(function () {
                 'BGM日常現代.mp3',
             ]
         },
-        methods: {
-            src: function (fileName) {
-                return 'music/BGM/' + fileName;
+        computed: {
+            pathList: function () {
+                return $.map(this.fileList, function (val) {
+                    return { name: val, path: 'music/BGM/' + val };
+                });
             }
-        }
+        },
     });
     new Vue({
         el: '#se',
         data: {
-            fileNames: [
+            fileList: [
                 'スマホのタップ音.mp3',
                 'アラーム.mp3',
                 'ドア現代.mp3',
@@ -126,11 +128,13 @@ $(document).ready(function () {
                 'スマホ破壊音.mp3',
             ]
         },
-        methods: {
-            src: function (fileName) {
-                return 'music/SE/' + fileName;
+        computed: {
+            pathList: function () {
+                return $.map(this.fileList, function (val) {
+                    return { name: val, path: 'music/SE/' + val };
+                });
             }
-        }
+        },
     });
 
     bgmPlayingPlayer = null;
