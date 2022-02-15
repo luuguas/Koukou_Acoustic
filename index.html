@@ -16,7 +16,7 @@
         <h2>BGM</h2>
         <div class="panels">
             <div class="player" v-for="file in pathList">
-                <audio :src="file.path" preload="metadata"></audio>
+                <audio :src="file.path" @loadedmetadata="onloadedmetadata" preload="metadata"></audio>
                 <button type="button"></button>
                 <div class="container">
                     <div class="discription">
@@ -54,10 +54,10 @@
                         <label class="title" v-cloak>{{ file.name }}</label>
                     </div>
                     <div class="cancel"></div>
-                    </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </body>
 

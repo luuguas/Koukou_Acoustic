@@ -102,6 +102,14 @@ $(document).ready(function () {
                 });
             }
         },
+        methods: {
+            onloadedmetadata: function (e) {
+                //動画の長さを表示
+                let audio = e.target;
+                let player = $(audio).parent();
+                $(player).find('.time-duration').text(displayTime($(audio).prop('duration')));
+            }
+        },
     });
     new Vue({
         el: '#se',
@@ -246,16 +254,6 @@ $(document).ready(function () {
                 seDraggingPlayer = null;
             }
         });
-
-        /* 動画の長さを表示 */
-        let loadDuration = setInterval(function (player) {
-            let audio = $(player).children('audio');
-            if (!isNaN($(audio).prop('duration'))) {
-                clearInterval(loadDuration);
-                $(player).find('.time-duration').text(displayTime($(audio).prop('duration')));
-            }
-        }, 10,
-            this);
     });
 
     //seの各playerに機能を追加
