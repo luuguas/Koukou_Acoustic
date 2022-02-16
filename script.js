@@ -92,7 +92,7 @@ $(document).ready(function () {
                 'BGM平安2.mp3',
                 'BGM平安貴族.mp3',
                 'Black Magic2.mp3',
-                'BGM日常現代.mp3',
+                //'BGM日常現代.mp3',
             ]
         },
         computed: {
@@ -142,6 +142,32 @@ $(document).ready(function () {
                     return { name: val, path: 'music/SE/' + val };
                 });
             }
+        },
+    });
+
+    //画像のプリロード
+    new Vue({
+        el: '#preload',
+        data: {
+            imageList: [
+                'Cracker.svg',
+                'Cracker_Disabled.svg',
+                'Cracker_Playing.svg',
+                'Note_BGM.svg',
+                'Note_SE.svg',
+                'Pause.svg',
+                'Pause_Disabled.svg',
+                'Play.svg',
+                'Play_Disabled.svg',
+                'Stop.svg',
+            ],
+        },
+        computed: {
+            pathList: function () {
+                return $.map(this.imageList, function (val, idx) {
+                    return 'image/' + val;
+                });
+            },
         },
     });
 
