@@ -250,36 +250,6 @@ $(document).ready(function () {
                 bgmPlayingPlayer = null;
             }
         });
-
-        /* 再生中のplayerのシークバーの動作 */
-        args = { player: this };
-        $(this).children('audio').on('timeupdate', args, function (e) {
-            changeSeekBarByAudio(e.data.player, fadeOut);
-        });
-
-        /* シークバーの動作 */
-        let seekBar = $(this).find('.seekbar');
-        //シークバーを押したときの動作
-        args = { player: this };
-        $(seekBar).mousedown(args, function (e) {
-            $(this).addClass('dragging');
-            seDraggingPlayer = e.data.player;
-            changeSeekBarByCursor(e, e.data.player)
-        });
-        //ドラッグした時の動作
-        $(document).mousemove(function (e) {
-            if (seDraggingPlayer !== null) {
-                changeSeekBarByCursor(e, seDraggingPlayer);
-            }
-        });
-        //ドラッグが終わった時の動作
-        $(document).mouseup(function () {
-            if (seDraggingPlayer !== null) {
-                changeAudioBySeekBar(seDraggingPlayer);
-                $(seDraggingPlayer).find('.seekbar').removeClass('dragging');
-                seDraggingPlayer = null;
-            }
-        });
     });
 
     //seの各playerに機能を追加

@@ -115,22 +115,20 @@ button {
 #bgm .seekbar {
     height: 10px;
     width: 260px;
-    background-color: rgb(170, 170, 170);
-
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    -webkit-appearance: none;
+    position: relative;
+    overflow: hidden;
     cursor: pointer;
 }
-#bgm .seekbar-played {
-    height: 100%;
-    width: 0%;
-    background-color: var(--sky);
+#bgm .seekbar::-webkit-slider-runnable-track {
+    background: rgb(170, 170, 170);
 }
-#bgm .seekbar-playing {
-    height: 100%;
+#bgm .seekbar::-webkit-slider-thumb {
+    -webkit-appearance: none;
     width: 10px;
-    background-color: rgb(184, 225, 239);
+    height: 10px;
+    background: rgb(192, 235, 250);
+    box-shadow: -100vw 0 0 100vw var(--sky);
 }
 
 
