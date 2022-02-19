@@ -15,24 +15,7 @@
     <div id="bgm">
         <h2>BGM</h2>
         <div class="panels">
-            <div class="player" v-for="file in pathList">
-                <audio :src="file.path" @loadedmetadata="onloadedmetadata" preload="metadata"></audio>
-                <button type="button"></button>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title" v-cloak>{{ file.name }}</label>
-                    </div>
-                    <div class="controller">
-                        <div class="time">
-                            <label class="time-current">00:00</label>
-                            <label class="time-div">/</label>
-                            <label class="time-duration">--:--</label>
-                        </div>
-                        <input type="range" min="0" max="100" step="0.01" value="0" class="seekbar">
-                    </div>
-                </div>
-            </div>
+            <music-player :file="file" v-for="file in pathList"></music-player>
         </div>
     </div>
     <div id="se">

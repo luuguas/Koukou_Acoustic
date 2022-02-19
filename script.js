@@ -80,6 +80,80 @@ function changeSeekBarByCursor(e, player) {
     }
 }
 
+let TimeController = {
+    props: {
+        currentTime: {
+            type: Number,
+            required: true,
+            validator: function (val) {
+                return val >= 0;
+            },
+        },
+        duration: {
+            type: Number,
+            required: true,
+            validator: function (val) {
+                //ロード前の状態は-1
+                return val >= 0 || val == -1;
+            },
+        },
+    },
+    template: `<div class="controller">
+        <div class="time">
+            <label class="time-current">00:00</label>
+            <label class="time-div">/</label>
+            <label class="time-duration">{{ formatTime(duration) }}</label>
+        </div>
+        <input type="range" min="0" :max="duration" step="0.01" value="0" class="seekbar">
+    </div>`,
+    methods: {
+        formatTime: function (time) {
+            if (time == -1)
+                return '--:--';
+            let minute = Math.floor(time / 60);
+            let second = Math.floor(time) % 60;
+            if (minute < 10)
+                minute = '0' + minute;
+            if (second < 10)
+                second = '0' + second;
+            return `${minute}:${second}`;
+        },
+    },
+};
+
+let MusicPlayer = {
+    props: {
+        file: {
+            type: Object,
+            required: true,
+        },
+    },
+    template: `<div class="player">
+        <audio :src="file.path" @loadedmetadata="onloadedmetadata" preload="metadata"></audio>
+        <button type="button"></button>
+        <div class="container">
+            <div class="discription">
+                <div class="note"></div>
+                <label class="title" v-cloak>{{ file.name }}</label>
+            </div>
+        <TimeController :currentTime="0" :duration="duration"></TimeController>
+        </div>
+    </div>`,
+    components: {
+        TimeController: TimeController,
+    },
+    data: function () {
+        return {
+            duration: -1,
+        };
+    },
+    methods: {
+        onloadedmetadata: function (e) {
+            this.duration = $(e.target).prop('duration');
+        }
+    },
+};
+
 $(document).ready(function () {
     console.log('JavaScript file (script.js) is running.');
 
@@ -95,19 +169,14 @@ $(document).ready(function () {
                 //'BGM日常現代.mp3',
             ]
         },
+        components: {
+            'music-player': MusicPlayer,
+        },
         computed: {
             pathList: function () {
                 return $.map(this.fileList, function (val) {
                     return { name: val, path: 'music/BGM/' + val };
                 });
-            }
-        },
-        methods: {
-            onloadedmetadata: function (e) {
-                //動画の長さを表示
-                let audio = e.target;
-                let player = $(audio).parent();
-                $(player).find('.time-duration').text(displayTime($(audio).prop('duration')));
             }
         },
     });
