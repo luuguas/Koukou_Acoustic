@@ -15,27 +15,13 @@
     <div id="bgm">
         <h2>BGM</h2>
         <div class="panels">
-            <music-player :file="file" v-for="file in pathList"></music-player>
+            <bgm-player :file="file" v-for="file in pathList"></bgm-player>
         </div>
     </div>
     <div id="se">
         <h2>SE</h2>
         <div class="panels">
-            <div class="player" v-for="file in pathList">
-                <div class="audios">
-                    <audio :src="file.path" preload="metadata"></audio>
-                </div>
-                <div class="play">
-                    <button type="button"></button>
-                </div>
-                <div class="container">
-                    <div class="discription">
-                        <div class="note"></div>
-                        <label class="title" v-cloak>{{ file.name }}</label>
-                    </div>
-                    <div class="cancel"></div>
-                </div>
-            </div>
+            <se-player :file="file" v-for="file in pathList"></se-player>
         </div>
     </div>
     <div id="preload" hidden>

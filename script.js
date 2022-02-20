@@ -121,7 +121,7 @@ let TimeController = {
     },
 };
 
-let MusicPlayer = {
+let BgmPlayer = {
     props: {
         file: {
             type: Object,
@@ -136,14 +136,15 @@ let MusicPlayer = {
                 <div class="note"></div>
                 <label class="title" v-cloak>{{ file.name }}</label>
             </div>
-        <TimeController :currentTime="0" :duration="duration"></TimeController>
+        <TimeController :currentTime="currentTime" :duration="duration"></TimeController>
         </div>
     </div>`,
     components: {
-        TimeController: TimeController,
+        TimeController,
     },
     data: function () {
         return {
+            currentTime: 0,
             duration: -1,
         };
     },
@@ -152,6 +153,30 @@ let MusicPlayer = {
             this.duration = $(e.target).prop('duration');
         }
     },
+};
+
+let SePlayer = {
+    props: {
+        file: {
+            type: Object,
+            required: true,
+        }
+    },
+    template: `<div class="player">
+        <div class="audios">
+            <audio :src="file.path" preload="metadata"></audio>
+        </div>
+        <div class="play">
+            <button type="button"></button>
+        </div>
+        <div class="container">
+            <div class="discription">
+                <div class="note"></div>
+                <label class="title" v-cloak>{{ file.name }}</label>
+            </div>
+            <div class="cancel"></div>
+        </div>
+    </div>`,
 };
 
 $(document).ready(function () {
@@ -170,7 +195,7 @@ $(document).ready(function () {
             ]
         },
         components: {
-            'music-player': MusicPlayer,
+            'bgm-player': BgmPlayer,
         },
         computed: {
             pathList: function () {
@@ -204,6 +229,9 @@ $(document).ready(function () {
                 '車の走行音.mp3',
                 'スマホ破壊音.mp3',
             ]
+        },
+        components: {
+            'se-player': SePlayer,
         },
         computed: {
             pathList: function () {
