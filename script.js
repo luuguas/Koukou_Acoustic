@@ -1,6 +1,5 @@
-//定数
+/* 定数 */
 const fadeOut = 1000;
-const playingWidth = 10;
 
 //グローバル変数
 let bgmPlayingPlayer;
@@ -12,74 +11,7 @@ function toggleClass(elem, before, after) {
     $(elem).addClass(after);
 }
 
-function displayTime(time) {
-    var minute = parseInt(time / 60);
-    var second = parseInt(time) % 60;
-    var ret = '';
-    if (minute < 10)
-        ret = ret + '0' + minute;
-    else
-        ret += ret + minute;
-    ret += ':'
-    if (second < 10)
-        ret = ret + '0' + second;
-    else
-        ret = ret + second;
-    return ret;
-}
-
-function changeSeekBarByAudio(player, fadeOut) {
-    let audio = $(player).children('audio');
-    let timeCurrent = $(player).find('.time-current');
-    let seekBar = $(player).find('.seekbar');
-    let seekBarPlayed = $(seekBar).children('.seekbar-played');
-    if (!$(seekBar).hasClass('dragging')) {
-        //時間表示を変更
-        $(timeCurrent).text(displayTime($(audio).prop('currentTime')));
-        //シークバーを変更
-        $(seekBarPlayed).width(parseInt(($(seekBar).width() - playingWidth) * $(audio).prop('currentTime') / $(audio).prop('duration') + 0.001)); //+0.001は誤差吸収
-        //audioが再生を終了する直前ならフェードアウト
-        if (1000 * ($(audio).prop('duration') - $(audio).prop('currentTime')) < fadeOut && !$(audio).prop('paused')) {
-            if ($(player).children('button').hasClass('playing'))
-                $(player).children('button').click();
-        }
-    }
-}
-
-function changeAudioBySeekBar(player) {
-    let audio = $(player).children('audio');
-    let seekBar = $(player).find('.seekbar');
-    let played = $(seekBar).children('.seekbar-played');
-    //シークバーの位置からaudioの再生時間を変更
-    if ($(played).width() === 0)
-        $(audio).prop('currentTime', 0.0);
-    else if ($(played).width() === $(seekBar).width() - playingWidth)
-        $(audio).prop('currentTime', $(audio).prop('duration'));
-    else
-        $(audio).prop('currentTime', $(played).width() / ($(seekBar).width() - playingWidth) * $(audio).prop('duration'));
-}
-
-function changeSeekBarByCursor(e, player) {
-    let timeCurrent = $(player).find('.time-current');
-    let seekBar = $(player).find('.seekbar');
-    let played = $(seekBar).children('.seekbar-played');
-    let duration = $(player).children('audio').prop('duration');
-    let seekBarOffset = $(seekBar).offset();
-    //シークバー及び表示中の再生時間を変更
-    if (e.pageX < seekBarOffset.left + playingWidth / 2) {
-        $(played).width(0);
-        $(timeCurrent).text(displayTime(0.0));
-    }
-    else if (seekBarOffset.left + $(seekBar).width() - playingWidth / 2 < e.pageX) {
-        $(played).width($(seekBar).width() - playingWidth);
-        $(timeCurrent).text(displayTime(duration));
-    }
-    else {
-        $(played).width(parseInt(e.pageX - seekBarOffset.left - playingWidth / 2));
-        $(timeCurrent).text(displayTime($(played).width() / ($(seekBar).width() - playingWidth) * duration));
-    }
-}
-
+/* コンポーネント */
 let TimeController = {
     props: {
         currentTime: {
@@ -100,12 +32,37 @@ let TimeController = {
     },
     template: `<div class="controller">
         <div class="time">
-            <label class="time-current">00:00</label>
+            <label class="time-current">{{ formatTime(displayedCurrentTime) }}</label>
             <label class="time-div">/</label>
             <label class="time-duration">{{ formatTime(duration) }}</label>
         </div>
-        <input type="range" min="0" :max="duration" step="0.01" value="0" class="seekbar">
+        <input
+            type="range"
+            min="0" :max="duration" step="0.001" :value="displayedCurrentTime"
+            class="seekbar"
+            @mousedown="onMouseDown" @input="onDragging" @mouseup="onMouseUp"
+        >
     </div>`,
+    data: function () {
+        return {
+            isDragging: 0, //0:非ドラッグ / 1:mouseup直後,currentTime変更前 / 2:ドラッグ中
+            rangeValue: 0,
+        };
+    },
+    computed: {
+        displayedCurrentTime: function () {
+            if (this.isDragging == 0)
+                return this.currentTime;
+            else
+                return this.rangeValue;
+        },
+    },
+    watch: {
+        currentTime: function () {
+            if (this.isDragging == 1)
+                this.isDragging = 0;
+        },
+    },
     methods: {
         formatTime: function (time) {
             if (time == -1)
@@ -118,6 +75,16 @@ let TimeController = {
                 second = '0' + second;
             return `${minute}:${second}`;
         },
+        onMouseDown: function () {
+            this.isDragging = 2;
+        },
+        onDragging: function (e) {
+            this.rangeValue = Number($(e.target).prop('value'));
+        },
+        onMouseUp: function () {
+            this.$emit('change-current-time', this.rangeValue);
+            this.isDragging = 1;
+        },
     },
 };
 
@@ -129,14 +96,22 @@ let BgmPlayer = {
         },
     },
     template: `<div class="player">
-        <audio :src="file.path" @loadedmetadata="onloadedmetadata" preload="metadata"></audio>
+        <audio
+            :src="file.path"
+            preload="metadata"
+            @loadedmetadata="onLoadedMetaData"
+            @timeupdate="onTimeUpdate"
+            ></audio>
         <button type="button"></button>
         <div class="container">
             <div class="discription">
                 <div class="note"></div>
                 <label class="title" v-cloak>{{ file.name }}</label>
             </div>
-        <TimeController :currentTime="currentTime" :duration="duration"></TimeController>
+        <TimeController
+            :currentTime="currentTime" :duration="duration"
+            @change-current-time="onChangeCurrentTime"
+        ></TimeController>
         </div>
     </div>`,
     components: {
@@ -149,9 +124,15 @@ let BgmPlayer = {
         };
     },
     methods: {
-        onloadedmetadata: function (e) {
+        onLoadedMetaData: function (e) {
             this.duration = $(e.target).prop('duration');
-        }
+        },
+        onTimeUpdate: function (e) {
+            this.currentTime = $(e.target).prop('currentTime');
+        },
+        onChangeCurrentTime: function (newCurrentTime) {
+            $(this.$el).find('audio').prop('currentTime', newCurrentTime);
+        },
     },
 };
 
