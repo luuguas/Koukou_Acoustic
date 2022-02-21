@@ -8,9 +8,6 @@ body {
     font-family: Roboto, sans-serif;
     user-select: none;
 }
-[v-cloak] {
-    display: none;
-}
 
 /* common */
 h2 {

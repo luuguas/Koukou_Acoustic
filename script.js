@@ -106,7 +106,7 @@ let BgmPlayer = {
         <div class="container">
             <div class="discription">
                 <div class="note"></div>
-                <label class="title" v-cloak>{{ file.name }}</label>
+                <label class="title">{{ file.name }}</label>
             </div>
         <TimeController
             :currentTime="currentTime" :duration="duration"
@@ -153,7 +153,7 @@ let SePlayer = {
         <div class="container">
             <div class="discription">
                 <div class="note"></div>
-                <label class="title" v-cloak>{{ file.name }}</label>
+                <label class="title">{{ file.name }}</label>
             </div>
             <div class="cancel"></div>
         </div>
