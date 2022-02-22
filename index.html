@@ -15,13 +15,13 @@
     <div id="bgm">
         <h2>BGM</h2>
         <div class="panels">
-            <bgm-player :file="file" v-for="file in pathList"></bgm-player>
+            <bgm-player :file="file" v-for="file in fileList" :key="file.key"></bgm-player>
         </div>
     </div>
     <div id="se">
         <h2>SE</h2>
         <div class="panels">
-            <se-player :file="file" v-for="file in pathList"></se-player>
+            <se-player :file="file" v-for="file in fileList" :key="file.key"></se-player>
         </div>
     </div>
     <div id="preload" hidden>

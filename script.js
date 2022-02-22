@@ -168,58 +168,146 @@ $(document).ready(function () {
         el: '#bgm',
         data: {
             fileList: [
-                'BGMタイムスリップ1.mp3',
-                'BGM平安2.mp3',
-                'BGM平安貴族.mp3',
-                'Black Magic2.mp3',
-                //'BGM日常現代.mp3',
+                {
+                    name: 'BGMタイムスリップ1.mp3',
+                    path: 'music/BGM/BGMタイムスリップ1.mp3',
+                    key: 0,
+                },
+                {
+                    name: 'BGM平安2.mp3',
+                    path: 'music/BGM/BGM平安2.mp3',
+                    key: 1,
+                },
+                {
+                    name: 'BGM平安貴族.mp3',
+                    path: 'music/BGM/BGM平安貴族.mp3',
+                    key: 2,
+                },
+                {
+                    name: 'Black Magic2.mp3',
+                    path: 'music/BGM/Black Magic2.mp3',
+                    key: 3,
+                },
+                {
+                    name: 'BGM日常現代.mp3',
+                    path: 'music/BGM/BGM日常現代.mp3',
+                    key: 4,
+                },
             ]
         },
         components: {
             'bgm-player': BgmPlayer,
         },
         computed: {
-            pathList: function () {
-                return $.map(this.fileList, function (val) {
-                    return { name: val, path: 'music/BGM/' + val };
-                });
-            }
+
         },
     });
     new Vue({
         el: '#se',
         data: {
             fileList: [
-                'スマホのタップ音.mp3',
-                'アラーム.mp3',
-                'ドア現代.mp3',
-                '走る.mp3',
-                '自動車事故.mp3',
-                'スマホ破壊音.mp3',
-                '喧嘩.mp3',
-                'ショック.mp3',
-                '思いつく1.mp3',
-                '羽子板3.mp3',
-                '笛.mp3',
-                '笛2.mp3',
-                '開門.mp3',
-                'きらきら輝く2.mp3',
-                '馬のいななき.mp3',
-                '馬が走る1.mp3',
-                '馬と衝突1.mp3',
-                '車の走行音.mp3',
-                'スマホ破壊音.mp3',
+                {
+                    name: 'スマホのタップ音.mp3',
+                    path: 'music/SE/スマホのタップ音.mp3',
+                    key: 0,
+                },
+                {
+                    name: 'アラーム.mp3',
+                    path: 'music/SE/アラーム.mp3',
+                    key: 1,
+                },
+                {
+                    name: 'ドア現代.mp3',
+                    path: 'music/SE/ドア現代.mp3',
+                    key: 2,
+                },
+                {
+                    name: '走る.mp3',
+                    path: 'music/SE/走る.mp3',
+                    key: 3,
+                },
+                {
+                    name: '自動車事故.mp3',
+                    path: 'music/SE/自動車事故.mp3',
+                    key: 4,
+                },
+                {
+                    name: 'スマホ破壊音.mp3',
+                    path: 'music/SE/スマホ破壊音.mp3',
+                    key: 5,
+                },
+                {
+                    name: '喧嘩.mp3',
+                    path: 'music/SE/喧嘩.mp3',
+                    key: 6,
+                },
+                {
+                    name: 'ショック.mp3',
+                    path: 'music/SE/ショック.mp3',
+                    key: 7,
+                },
+                {
+                    name: '思いつく1.mp3',
+                    path: 'music/SE/思いつく1.mp3',
+                    key: 8,
+                },
+                {
+                    name: '羽子板3.mp3',
+                    path: 'music/SE/羽子板3.mp3',
+                    key: 9,
+                },
+                {
+                    name: '笛.mp3',
+                    path: 'music/SE/笛.mp3',
+                    key: 10,
+                },
+                {
+                    name: '笛2.mp3',
+                    path: 'music/SE/笛2.mp3',
+                    key: 11,
+                },
+                {
+                    name: '開門.mp3',
+                    path: 'music/SE/開門.mp3',
+                    key: 12,
+                },
+                {
+                    name: 'きらきら輝く2.mp3',
+                    path: 'music/SE/きらきら輝く2.mp3',
+                    key: 13,
+                },
+                {
+                    name: '馬のいななき.mp3',
+                    path: 'music/SE/馬のいななき.mp3',
+                    key: 14,
+                },
+                {
+                    name: '馬が走る1.mp3',
+                    path: 'music/SE/馬が走る1.mp3',
+                    key: 15,
+                },
+                {
+                    name: '馬と衝突1.mp3',
+                    path: 'music/SE/馬と衝突1.mp3',
+                    key: 16,
+                },
+                {
+                    name: '車の走行音.mp3',
+                    path: 'music/SE/車の走行音.mp3',
+                    key: 17,
+                },
+                {
+                    name: 'スマホ破壊音.mp3',
+                    path: 'music/SE/スマホ破壊音.mp3',
+                    key: 18,
+                },
             ]
         },
         components: {
             'se-player': SePlayer,
         },
         computed: {
-            pathList: function () {
-                return $.map(this.fileList, function (val) {
-                    return { name: val, path: 'music/SE/' + val };
-                });
-            }
+
         },
     });
 
