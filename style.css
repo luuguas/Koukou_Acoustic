@@ -144,13 +144,13 @@ button {
 #se .play {
     height: 50px;
 }
-#se .play button {
+#se .play {
     background-image: url(image/Cracker.svg);
 }
-#se .play button.playing {
+#se .play.playing {
     background-image: url(image/Cracker_Playing.svg);
 }
-#se .play button.playing:disabled {
+#se .play.playing:disabled {
     background-image: url(image/Cracker_Disabled.svg);
 }
 

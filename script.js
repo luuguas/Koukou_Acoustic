@@ -101,7 +101,7 @@ let BgmPlayer = {
             preload="metadata"
             @loadedmetadata="onLoadedMetaData"
             @timeupdate="onTimeUpdate"
-            ></audio>
+        ></audio>
         <button type="button"></button>
         <div class="container">
             <div class="discription">
@@ -145,11 +145,16 @@ let SePlayer = {
     },
     template: `<div class="player">
         <div class="audios">
-            <audio :src="file.path" preload="metadata"></audio>
+            <audio
+                :src="file.path" preload="metadata"
+                v-for="idx in 5" :key="idx"
+            ></audio>
         </div>
-        <div class="play">
-            <button type="button"></button>
-        </div>
+        <button
+            type="button" class="play"
+            :class="{ playing: playingAny }"
+            :disabled="!canPlay"
+        ></button>
         <div class="container">
             <div class="discription">
                 <div class="note"></div>
@@ -158,7 +163,59 @@ let SePlayer = {
             <div class="cancel"></div>
         </div>
     </div>`,
+    data: function () {
+        return {
+            isPlaying: [false, false, false, false, false],
+        };
+    },
+    computed: {
+        playingNum: function () {
+            let num = 0;
+            for (let val of this.isPlaying) {
+                if (val) { ++num; }
+            }
+            return num;
+        },
+        playingAny: function () {
+            return this.playingNum > 0;
+        },
+        canPlay: function () {
+            return this.playingNum < 5;
+        },
+    },
+    mounted: function () {
+        let el = this.$el;
+        let that = this;
+        let playButton = $(el).find('.play');
+
+        $(playButton).click(function (e) {
+            let idx = 0;
+            while (that.isPlaying[idx]) ++idx;
+
+            let cancelButton = $('<button>', { type: 'button', key: idx });
+            $(cancelButton).click(function (e) {
+                let idx = Number($(this).attr('key'));
+                $(el).find('audio').eq(idx).trigger('pause');
+                $(el).find('audio').eq(idx).prop('currentTime', 0.0);
+                Vue.set(that.isPlaying, idx, false);
+                $(this).remove();
+            });
+            $(el).find('.cancel').append(cancelButton);
+
+            $(el).find('audio').eq(idx).trigger('play');
+            Vue.set(that.isPlaying, idx, true);
+        });
+
+        $(el).find('audio').each(function (idx, val) {
+            $(val).on('ended', function (e) {
+                Vue.set(that.isPlaying, idx, false);
+                $(el).find('.cancel>button[key="' + idx + '"]').remove();
+            });
+        });
+    },
 };
+
+//Main
 
 $(document).ready(function () {
     console.log('JavaScript file (script.js) is running.');
@@ -414,66 +471,6 @@ $(document).ready(function () {
             if ($(e.data.button).hasClass('playing')) {
                 toggleClass(e.data.button, 'playing', 'pausing');
                 bgmPlayingPlayer = null;
-            }
-        });
-    });
-
-    //seの各playerに機能を追加
-    $('#se .player').each(function () {
-        //audioを複製
-        $(this).find('audio:first').attr('index', 'cancel-0');
-        for (let i = 1; i < 5; ++i) {
-            $(this).children('.audios').append($(this).find('audio:first').clone(true));
-            $(this).find('audio').eq(i).attr('index', 'cancel-' + i);
-        }
-
-        /* 再生が終了した時の処理 */
-        args = { player: this };
-        $(this).find('audio').on('ended', args, function (e) {
-            //cancelボタンを削除
-            $(e.data.player).find('.cancel button').remove('.' + $(this).attr('index'));
-            //再生中のaudioの個数を1減らす
-            let button = $(e.data.player).find('.play button');
-            $(button).attr('playing-num', parseInt($(button).attr('playing-num')) - 1);
-
-            //発火ボタンの状態を変更
-            if ($(button).attr('playing-num') === '0')
-                toggleClass(button, 'playing', 'pausing');
-            if (parseInt($(button).attr('playing-num')) < 5)
-                $(button).attr('disabled', false);
-        });
-
-        /* 発火ボタンの機能 */
-        let button = $(this).find('.play button');
-        $(button).attr('playing-num', '0');
-        $(button).addClass('pausing');
-        args = { player: this };
-        $(button).click(args, function (e) {
-            let audios = $(e.data.player).find('audio');
-            for (let i = 0; i < 5; ++i) {
-                if ($(audios).eq(i).prop('paused')) {
-                    let audio = $(audios).eq(i);
-                    //audioを再生
-                    $(audio).prop('currentTime', 0.0);
-                    audio[0].play();
-                    //cancelボタンを追加
-                    let cancelButton = $('<button>', { class: 'cancel-' + i });
-                    args = { audio: audio };
-                    $(cancelButton).click(args, function (e) {
-                        //endedイベントを発火
-                        $(e.data.audio).prop('currentTime', $(e.data.audio).prop('duration'));
-                    });
-                    $(e.data.player).find('.cancel').append(cancelButton);
-
-                    //再生中のaudioの個数を1増やす
-                    $(this).attr('playing-num', parseInt($(this).attr('playing-num')) + 1);
-                    //発火ボタンの状態を変更
-                    toggleClass(this, 'pausing', 'playing');
-                    if (parseInt($(this).attr('playing-num')) === 5)
-                        $(this).attr('disabled', true);
-
-                    return;
-                }
             }
         });
     });
