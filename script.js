@@ -1,16 +1,3 @@
-/* 定数 */
-const fadeOut = 1000;
-
-//グローバル変数
-let bgmPlayingPlayer;
-let seDraggingPlayer;
-let args;
-
-function toggleClass(elem, before, after) {
-    $(elem).removeClass(before);
-    $(elem).addClass(after);
-}
-
 /* コンポーネント */
 let TimeController = {
     props: {
@@ -94,6 +81,10 @@ let BgmPlayer = {
             type: Object,
             required: true,
         },
+        playingKey: {
+            type: Number,
+            required: true,
+        },
     },
     template: `<div class="player">
         <audio
@@ -102,7 +93,12 @@ let BgmPlayer = {
             @loadedmetadata="onLoadedMetaData"
             @timeupdate="onTimeUpdate"
         ></audio>
-        <button type="button"></button>
+        <button
+            type="button" class="play"
+            :class="[ playerStatus ]"
+            :disabled="!canPlay"
+            @click="onClick"
+        ></button>
         <div class="container">
             <div class="discription">
                 <div class="note"></div>
@@ -121,7 +117,30 @@ let BgmPlayer = {
         return {
             currentTime: 0,
             duration: -1,
+
+            playerStatus: 'pausing',
+            canPlay: true,
+            fadeOutDuration: 1000, //const
         };
+    },
+    watch: {
+        playingKey: function (newKey) {
+            if (newKey < 0) {
+                this.canPlay = false;
+                if (newKey == -this.file.key) {
+                    this.fadeOutAudio();
+                }
+            }
+            else {
+                this.canPlay = true;
+                if (newKey == this.file.key) {
+                    this.playAudio();
+                }
+                else {
+                    this.playerStatus = 'pausing';
+                }
+            }
+        },
     },
     methods: {
         onLoadedMetaData: function (e) {
@@ -129,9 +148,37 @@ let BgmPlayer = {
         },
         onTimeUpdate: function (e) {
             this.currentTime = $(e.target).prop('currentTime');
+            if (this.currentTime + this.fadeOutDuration / 1000.0 >= this.duration && this.playingKey > 0) {
+                this.$emit('play-request', this.file.key);
+            }
         },
         onChangeCurrentTime: function (newCurrentTime) {
             $(this.$el).find('audio').prop('currentTime', newCurrentTime);
+        },
+
+        onClick: function (e) {
+            this.$emit('play-request', this.file.key);
+        },
+
+        playAudio: function () {
+            this.playerStatus = 'playing';
+            $(this.$el).find('audio').trigger('play');
+        },
+        fadeOutAudio: function () {
+            this.playerStatus = 'fading';
+            let that = this;
+            let fadeVolume = setInterval(function (audio, startTime, duration) {
+                let now = Date.now();
+                if (now - startTime <= duration) {
+                    $(audio).prop('volume', (startTime + duration - now) / duration);
+                } else {
+                    clearInterval(fadeVolume);
+                    $(audio).trigger('pause');
+                    $(audio).prop('volume', 1.0);
+                    that.$emit('standby');
+                }
+            }, 50,
+                $(this.$el).find('audio'), Date.now(), this.fadeOutDuration);
         },
     },
 };
@@ -147,7 +194,7 @@ let SePlayer = {
         <div class="audios">
             <audio
                 :src="file.path" preload="metadata"
-                v-for="idx in 5" :key="idx"
+                v-for="idx in audioMax" :key="idx"
             ></audio>
         </div>
         <button
@@ -166,6 +213,7 @@ let SePlayer = {
     data: function () {
         return {
             isPlaying: [false, false, false, false, false],
+            audioMax: 5, //const
         };
     },
     computed: {
@@ -180,7 +228,7 @@ let SePlayer = {
             return this.playingNum > 0;
         },
         canPlay: function () {
-            return this.playingNum < 5;
+            return this.playingNum < this.audioMax;
         },
     },
     mounted: function () {
@@ -223,44 +271,67 @@ $(document).ready(function () {
     //playerを追加
     new Vue({
         el: '#bgm',
+        name: 'BGM',
         data: {
+            //key==0: 再生中のplayer無し
+            // key>0: keyに一致するplayerが再生中
+            // key<0: -keyに一致するplayerがフェードアウト中
+            playingKey: 0,
+            requestedKey: 0,
             fileList: [
                 {
                     name: 'BGMタイムスリップ1.mp3',
                     path: 'music/BGM/BGMタイムスリップ1.mp3',
-                    key: 0,
+                    key: 1,
                 },
                 {
                     name: 'BGM平安2.mp3',
                     path: 'music/BGM/BGM平安2.mp3',
-                    key: 1,
+                    key: 2,
                 },
                 {
                     name: 'BGM平安貴族.mp3',
                     path: 'music/BGM/BGM平安貴族.mp3',
-                    key: 2,
+                    key: 3,
                 },
                 {
                     name: 'Black Magic2.mp3',
                     path: 'music/BGM/Black Magic2.mp3',
-                    key: 3,
+                    key: 4,
                 },
                 {
                     name: 'BGM日常現代.mp3',
                     path: 'music/BGM/BGM日常現代.mp3',
-                    key: 4,
+                    key: 5,
                 },
             ]
         },
         components: {
             'bgm-player': BgmPlayer,
         },
-        computed: {
-
+        methods: {
+            onPlayRequest: function (key) {
+                this.requestedKey = key;
+                if (this.playingKey == 0) {
+                    this.playingKey = key;
+                }
+                else {
+                    this.playingKey = -this.playingKey
+                }
+            },
+            onStandby: function () {
+                if (this.playingKey == -this.requestedKey) {
+                    this.playingKey = 0;
+                }
+                else {
+                    this.playingKey = this.requestedKey;
+                }
+            },
         },
     });
     new Vue({
         el: '#se',
+        name: 'SE',
         data: {
             fileList: [
                 {
@@ -371,6 +442,7 @@ $(document).ready(function () {
     //画像のプリロード
     new Vue({
         el: '#preload',
+        name: 'Preload',
         data: {
             imageList: [
                 'Cracker.svg',
@@ -392,86 +464,5 @@ $(document).ready(function () {
                 });
             },
         },
-    });
-
-    bgmPlayingPlayer = null;
-    seDraggingPlayer = null;
-
-    //bgm内の各playerに機能を追加
-    $('#bgm .player').each(function () {
-
-        /* 再生・一時停止ボタンの機能 */
-        let button = $(this).children('button');
-        $(button).addClass('pausing');
-        args = { player: this };
-        $(button).click(args, function (e) {
-            let player = e.data.player;
-            if ($(this).hasClass('playing')) { //同一player内のaudioが再生中
-                toggleClass(this, 'playing', 'fading');
-                $('#bgm button').attr('disabled', true);
-
-                //audioの音量をフェードアウト
-                let fadeVolume = setInterval(function (button, audio, startTime, duration) {
-                    let now = Date.now();
-                    if (now - startTime > duration) {
-                        clearInterval(fadeVolume);
-                        //再生中のaudioを停止
-                        $(audio)[0].pause();
-                        $(audio)[0].volume = 1.0;
-                        toggleClass(button, 'fading', 'pausing');
-                        bgmPlayingPlayer = null;
-                        //buttonを選択可にする
-                        $('#bgm button').attr('disabled', false);
-                    }
-                    else {
-                        $(audio)[0].volume = (startTime + duration - now) / duration;
-                    }
-                }, 50,
-                    this, $(player).children('audio'), Date.now(), fadeOut);
-            }
-            else if (bgmPlayingPlayer !== null) { //他のplayer内のaudioが再生中
-                //buttonを選択不可にする
-                toggleClass($(bgmPlayingPlayer).children('button'), 'playing', 'fading');
-                $('#bgm button').attr('disabled', true);
-
-                //audioの音量をフェードアウト
-                let fadeVolume = setInterval(function (playingPlayer, myPlayer, startTime, duration) {
-                    let now = Date.now();
-                    let playingButton = $(playingPlayer).children('button');
-                    let playingAudio = $(playingPlayer).children('audio');
-                    if (now - startTime > duration) {
-                        clearInterval(fadeVolume);
-                        //再生中のaudioを停止
-                        $(playingAudio)[0].pause();
-                        $(playingAudio)[0].volume = 1.0;
-                        toggleClass(playingButton, 'fading', 'pausing');
-                        //自分のaudioを再生
-                        $(myPlayer).children('audio')[0].play();
-                        toggleClass($(myPlayer).children('button'), 'pausing', 'playing');
-                        bgmPlayingPlayer = myPlayer;
-                        //buttonを選択可にする
-                        $('#bgm button').attr('disabled', false);
-                    }
-                    else {
-                        $(playingAudio)[0].volume = (startTime + duration - now) / duration;
-                    }
-                }, 50,
-                    bgmPlayingPlayer, player, Date.now(), fadeOut);
-            }
-            else { //どのaudioも再生していない
-                $(player).children('audio')[0].play();
-                toggleClass(this, 'pausing', 'playing');
-                bgmPlayingPlayer = player;
-            }
-        });
-
-        /* 再生が終了した時のbuttonの動作 */
-        args = { button: $(this).children('button') };
-        $(this).children('audio').on('ended', args, function (e) {
-            if ($(e.data.button).hasClass('playing')) {
-                toggleClass(e.data.button, 'playing', 'pausing');
-                bgmPlayingPlayer = null;
-            }
-        });
     });
 });
