@@ -318,6 +318,12 @@ $(document).ready(function () {
             'bgm-player': BgmPlayer,
         },
         methods: {
+            onLoadLastFolder: function (e) {
+
+            },
+            onOpenFolder: function (e) {
+
+            },
             onPlayRequest: function (key) {
                 this.requestedKey = key;
                 if (this.playingKey == 0) {
