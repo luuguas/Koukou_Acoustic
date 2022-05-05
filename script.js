@@ -38,28 +38,34 @@ let TimeController = {
     },
     computed: {
         displayedCurrentTime: function () {
-            if (this.isDragging == 0)
+            if (this.isDragging == 0) {
                 return this.currentTime;
-            else
+            }
+            else {
                 return this.rangeValue;
+            }
         },
     },
     watch: {
         currentTime: function () {
-            if (this.isDragging == 1)
+            if (this.isDragging == 1) {
                 this.isDragging = 0;
+            }
         },
     },
     methods: {
         formatTime: function (time) {
-            if (time == -1)
+            if (time == -1) {
                 return '--:--';
+            }
             let minute = Math.floor(time / 60);
             let second = Math.floor(time) % 60;
-            if (minute < 10)
+            if (minute < 10) {
                 minute = '0' + minute;
-            if (second < 10)
+            }
+            if (second < 10) {
                 second = '0' + second;
+            }
             return `${minute}:${second}`;
         },
         onMouseDown: function () {
@@ -220,7 +226,9 @@ let SePlayer = {
         playingNum: function () {
             let num = 0;
             for (let val of this.isPlaying) {
-                if (val) { ++num; }
+                if (val) {
+                    ++num;
+                }
             }
             return num;
         },
