@@ -200,13 +200,16 @@ let SePlayer = {
         <div class="audios">
             <audio
                 :src="file.path" preload="metadata"
-                v-for="idx in audioMax" :key="idx"
+                v-for="idx in audioMax" :key="idx-1"
+                :data-key="idx-1"
+                @ended="onEnded"
             ></audio>
         </div>
         <button
             type="button" class="play"
             :class="{ playing: playingAny }"
             :disabled="!canPlay"
+            @click="onPlay"
         ></button>
         <div class="container">
             <div class="discription">
@@ -239,35 +242,33 @@ let SePlayer = {
             return this.playingNum < this.audioMax;
         },
     },
-    mounted: function () {
-        let el = this.$el;
-        let that = this;
-        let playButton = $(el).find('.play');
+    methods: {
+        onPlay: function (e) {
+            let el = this.$el;
+            let that = this;
 
-        $(playButton).click(function (e) {
             let idx = 0;
-            while (that.isPlaying[idx]) ++idx;
-
-            let cancelButton = $('<button>', { type: 'button', key: idx });
+            while (this.isPlaying[idx]) {
+                ++idx;
+            }
+            let audio = $(el).find('audio').eq(idx);
+            let cancelButton = $('<button>', { type: 'button', 'data-key': idx });
             $(cancelButton).click(function (e) {
-                let idx = Number($(this).attr('key'));
-                $(el).find('audio').eq(idx).trigger('pause');
-                $(el).find('audio').eq(idx).prop('currentTime', 0.0);
+                $(audio).trigger('pause');
+                $(audio).prop('currentTime', 0.0);
                 Vue.set(that.isPlaying, idx, false);
                 $(this).remove();
             });
             $(el).find('.cancel').append(cancelButton);
 
-            $(el).find('audio').eq(idx).trigger('play');
-            Vue.set(that.isPlaying, idx, true);
-        });
-
-        $(el).find('audio').each(function (idx, val) {
-            $(val).on('ended', function (e) {
-                Vue.set(that.isPlaying, idx, false);
-                $(el).find('.cancel>button[key="' + idx + '"]').remove();
-            });
-        });
+            $(audio).trigger('play');
+            Vue.set(this.isPlaying, idx, true);
+        },
+        onEnded: function (e) {
+            let idx = Number($(e.target).attr('data-key'));
+            Vue.set(this.isPlaying, idx, false);
+            $(this.$el).find('.cancel>button[data-key="' + idx + '"]').remove();
+        }
     },
 };
 
