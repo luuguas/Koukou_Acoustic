@@ -15,10 +15,15 @@
     <div id="bgm">
         <h2>BGM</h2>
         <div class="file">
-            <button type="button" class="load-last-folder"
-                @click="onLoadLastFolder">前回のフォルダを開く</button>
-            <button type="button" class="open-folder"
-                @click="onOpenFolder">フォルダを開く...</button>
+            <button
+                type="button" class="load-last-folder"
+                :disabled="!hasHistory"
+                @click="onLoadLastFolder"
+            >前回のフォルダを開く</button>
+            <button
+                type="button" class="open-folder"
+                @click="onOpenFolder"
+            >フォルダを開く...</button>
         </div>
         <div class="panels">
             <bgm-player
@@ -31,6 +36,17 @@
     </div>
     <div id="se">
         <h2>SE</h2>
+        <div class="file">
+            <button
+                type="button" class="load-last-folder"
+                :disabled="!hasHistory"
+                @click="onLoadLastFolder"
+            >前回のフォルダを開く</button>
+            <button
+                type="button" class="open-folder"
+                @click="onOpenFolder"
+            >フォルダを開く...</button>
+        </div>
         <div class="panels">
             <se-player
                 :file="file"

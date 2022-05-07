@@ -49,6 +49,10 @@ h2 {
     font-size: 0.9rem;
     background-color: rgb(230, 230, 230);
 }
+.file button:disabled {
+    color:rgb(170, 170, 170);
+    background-color: rgb(235, 235, 235);
+}
 
 /* #bgm */
 #bgm h2 {

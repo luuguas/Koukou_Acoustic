@@ -1,3 +1,136 @@
+/* データベース操作 */
+let database = null;
+const databaseName = 'Koukou_Acoustic';
+const storeName = 'setting';
+const mode = { mode: 'read' };
+
+function getDatabase(databaseName) { //async
+    return new Promise(async (resolve, reject) => {
+        let openRequest = indexedDB.open(databaseName);
+        openRequest.onerror = () => {
+            console.error('Failed to get Database.');
+            reject(null);
+        };
+        openRequest.onupgradeneeded = (e) => {
+            console.info('Created new Database.');
+            let newDatabase = e.target.result;
+            newDatabase.createObjectStore(storeName, { keyPath: 'key' });
+        };
+        openRequest.onsuccess = (e) => {
+            console.log('Succeeded in getting Database.');
+            resolve(e.target.result);
+        };
+    });
+}
+function saveDataToDatabase(key, value) { //async
+    return new Promise(async (resolve, reject) => {
+        if (!database) {
+            database = await getDatabase(databaseName);
+        }
+        let trans = database.transaction(storeName, 'readwrite');
+        let store = trans.objectStore(storeName);
+        let addRequest = store.put({ key, value });
+        addRequest.onerror = () => {
+            console.error('Failed to save "' + key + '".');
+            reject(false);
+        };
+        addRequest.onsuccess = () => {
+            console.log('Succeeded in saving "' + key + '".');
+            resolve(true);
+        };
+    });
+}
+function loadDataFromDatabase(key) { //async
+    return new Promise(async (resolve, reject) => {
+        if (!database) {
+            database = await getDatabase(databaseName);
+        }
+        let trans = database.transaction(storeName, 'readonly');
+        let store = trans.objectStore(storeName);
+        let getRequest = store.get(key);
+        getRequest.onerror = () => {
+            console.error('Failed to load "' + key + '".');
+            reject(null);
+        };
+        getRequest.onsuccess = (e) => {
+            if (e.target.result) {
+                console.log('Succeeded in loading "' + key + '".');
+                resolve(e.target.result.value);
+            }
+            else {
+                console.log('Succeeded in loading "' + key + '", but it was undefined.');
+                resolve(null);
+            }
+        }
+    });
+}
+
+/* ミックスイン */
+let directoryReadable = {
+    data: {
+        hasHistory: true,
+    },
+    methods: {
+        loadAudiosFromDirectory: async function (directoryHandle) {
+            this.fileList = await new Promise(async (resolve, reject) => {
+                let fileList = [];
+                let pathRequests = [];
+                let idx = 0;
+                for await (let handle of directoryHandle.values()) {
+                    await new Promise(async (resolve, reject) => {
+                        if (handle.kind === 'file') {
+                            let file = await handle.getFile();
+                            if (file.type.match('audio.*')) {
+                                fileList.push({
+                                    name: file.name,
+                                    path: '',
+                                    key: idx + 1,
+                                });
+                                pathRequests.push(
+                                    new Promise((resolve, reject) => {
+                                        let i = idx;
+                                        let reader = new FileReader();
+                                        reader.onload = (e) => {
+                                            fileList[i].path = e.target.result;
+                                            resolve();
+                                        };
+                                        reader.readAsDataURL(file);
+                                    })
+                                );
+                            }
+                        }
+                        resolve();
+                    });
+                    ++idx;
+                }
+                await Promise.all(pathRequests);
+                resolve(fileList);
+            });
+        },
+        onLoadLastFolder: async function (e) {
+            let directoryHandle = await loadDataFromDatabase(this.dirKey);
+            if (await directoryHandle.queryPermission(mode) !== 'granted' && await directoryHandle.requestPermission(mode) !== 'granted') {
+                console.log('loading "' + directoryHandle.name + '" was rejected.');
+                return;
+            }
+            this.loadAudiosFromDirectory(directoryHandle);
+        },
+        onOpenFolder: async function (e) {
+            let directoryHandle = await window.showDirectoryPicker();
+            this.loadAudiosFromDirectory(directoryHandle);
+            saveDataToDatabase(this.dirKey, directoryHandle);
+        },
+    },
+    created: async function () {
+        if (await loadDataFromDatabase(this.dirKey)) {
+            this.hasHistory = true;
+        }
+        else {
+            this.hasHistory = false;
+        }
+    },
+};
+
 /* コンポーネント */
 let TimeController = {
     props: {
@@ -272,59 +405,25 @@ let SePlayer = {
     },
 };
 
-//Main
-
 $(document).ready(function () {
-    console.log('JavaScript file (script.js) is running.');
-
     //playerを追加
     new Vue({
         el: '#bgm',
         name: 'BGM',
+        components: {
+            'bgm-player': BgmPlayer,
+        },
+        mixins: [directoryReadable],
         data: {
+            dirKey: 'bgm',
             //key==0: 再生中のplayer無し
             // key>0: keyに一致するplayerが再生中
             // key<0: -keyに一致するplayerがフェードアウト中
             playingKey: 0,
             requestedKey: 0,
-            fileList: [
-                {
-                    name: 'BGMタイムスリップ1.mp3',
-                    path: 'music/BGM/BGMタイムスリップ1.mp3',
-                    key: 1,
-                },
-                {
-                    name: 'BGM平安2.mp3',
-                    path: 'music/BGM/BGM平安2.mp3',
-                    key: 2,
-                },
-                {
-                    name: 'BGM平安貴族.mp3',
-                    path: 'music/BGM/BGM平安貴族.mp3',
-                    key: 3,
-                },
-                {
-                    name: 'Black Magic2.mp3',
-                    path: 'music/BGM/Black Magic2.mp3',
-                    key: 4,
-                },
-                {
-                    name: 'BGM日常現代.mp3',
-                    path: 'music/BGM/BGM日常現代.mp3',
-                    key: 5,
-                },
-            ]
-        },
-        components: {
-            'bgm-player': BgmPlayer,
+            fileList: [],
         },
         methods: {
-            onLoadLastFolder: function (e) {
-
-            },
-            onOpenFolder: function (e) {
-
-            },
             onPlayRequest: function (key) {
                 this.requestedKey = key;
                 if (this.playingKey == 0) {
@@ -347,110 +446,13 @@ $(document).ready(function () {
     new Vue({
         el: '#se',
         name: 'SE',
-        data: {
-            fileList: [
-                {
-                    name: 'スマホのタップ音.mp3',
-                    path: 'music/SE/スマホのタップ音.mp3',
-                    key: 0,
-                },
-                {
-                    name: 'アラーム.mp3',
-                    path: 'music/SE/アラーム.mp3',
-                    key: 1,
-                },
-                {
-                    name: 'ドア現代.mp3',
-                    path: 'music/SE/ドア現代.mp3',
-                    key: 2,
-                },
-                {
-                    name: '走る.mp3',
-                    path: 'music/SE/走る.mp3',
-                    key: 3,
-                },
-                {
-                    name: '自動車事故.mp3',
-                    path: 'music/SE/自動車事故.mp3',
-                    key: 4,
-                },
-                {
-                    name: 'スマホ破壊音.mp3',
-                    path: 'music/SE/スマホ破壊音.mp3',
-                    key: 5,
-                },
-                {
-                    name: '喧嘩.mp3',
-                    path: 'music/SE/喧嘩.mp3',
-                    key: 6,
-                },
-                {
-                    name: 'ショック.mp3',
-                    path: 'music/SE/ショック.mp3',
-                    key: 7,
-                },
-                {
-                    name: '思いつく1.mp3',
-                    path: 'music/SE/思いつく1.mp3',
-                    key: 8,
-                },
-                {
-                    name: '羽子板3.mp3',
-                    path: 'music/SE/羽子板3.mp3',
-                    key: 9,
-                },
-                {
-                    name: '笛.mp3',
-                    path: 'music/SE/笛.mp3',
-                    key: 10,
-                },
-                {
-                    name: '笛2.mp3',
-                    path: 'music/SE/笛2.mp3',
-                    key: 11,
-                },
-                {
-                    name: '開門.mp3',
-                    path: 'music/SE/開門.mp3',
-                    key: 12,
-                },
-                {
-                    name: 'きらきら輝く2.mp3',
-                    path: 'music/SE/きらきら輝く2.mp3',
-                    key: 13,
-                },
-                {
-                    name: '馬のいななき.mp3',
-                    path: 'music/SE/馬のいななき.mp3',
-                    key: 14,
-                },
-                {
-                    name: '馬が走る1.mp3',
-                    path: 'music/SE/馬が走る1.mp3',
-                    key: 15,
-                },
-                {
-                    name: '馬と衝突1.mp3',
-                    path: 'music/SE/馬と衝突1.mp3',
-                    key: 16,
-                },
-                {
-                    name: '車の走行音.mp3',
-                    path: 'music/SE/車の走行音.mp3',
-                    key: 17,
-                },
-                {
-                    name: 'スマホ破壊音.mp3',
-                    path: 'music/SE/スマホ破壊音.mp3',
-                    key: 18,
-                },
-            ]
-        },
         components: {
             'se-player': SePlayer,
         },
-        computed: {
-
+        mixins: [directoryReadable],
+        data: {
+            dirKey: 'se',
+            fileList: [],
         },
     });
 
@@ -474,7 +476,7 @@ $(document).ready(function () {
         },
         computed: {
             pathList: function () {
-                return $.map(this.imageList, function (val, idx) {
+                return $.map(this.imageList, (val, idx) => {
                     return 'image/' + val;
                 });
             },
