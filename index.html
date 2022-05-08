@@ -8,6 +8,8 @@
     <link href="style.css" rel="stylesheet">
     <script type="text/javascript" src="lib/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="lib/vue.js"></script>
+    <script type="text/javascript" src="lib/Sortable.min.js"></script>
+    <script type="text/javascript" src="lib/vuedraggable.umd.min.js"></script>
     <script type="text/javascript" src="script.js"></script>
 </head>
 
@@ -25,14 +27,14 @@
                 @click="onOpenFolder"
             >フォルダを開く...</button>
         </div>
-        <div class="panels">
+        <draggable v-bind="dragOptions"><transition-group class="panels">
             <bgm-player
                 :file="file" :playing-key="playingKey"
                 v-for="file in fileList" :key="file.key"
                 @play-request="onPlayRequest"
                 @standby="onStandby"
             ></bgm-player>
-        </div>
+        </transition-group></draggable>
     </div>
     <div id="se">
         <h2>SE</h2>
@@ -47,12 +49,12 @@
                 @click="onOpenFolder"
             >フォルダを開く...</button>
         </div>
-        <div class="panels">
+        <draggable v-bind="dragOptions"><transition-group class="panels">
             <se-player
                 :file="file"
                 v-for="file in fileList" :key="file.key"
             ></se-player>
-        </div>
+        </transition-group></draggable>
     </div>
     <div id="preload" hidden>
         <img :src="path" v-for="path in pathList">

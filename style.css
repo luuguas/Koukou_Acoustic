@@ -32,12 +32,8 @@ h2 {
     flex-direction: row;
     align-items: center;
 }
-.play {
-    height: 50px;
-    width: 50px;
-    margin-right: 15px;
-    background-position: center center;
-    background-size: contain;
+.player.ghost {
+    opacity: 0.3;
 }
 .file {
     margin: 0 0 5px 10px;
@@ -52,6 +48,23 @@ h2 {
 .file button:disabled {
     color:rgb(170, 170, 170);
     background-color: rgb(235, 235, 235);
+}
+.play {
+    height: 50px;
+    width: 50px;
+    margin-right: 15px;
+    background-position: center center;
+    background-size: contain;
+}
+.handle {
+    margin-left: 12px;
+    height: 60%;
+    width: 15px;
+    background-image: url(image/Handle.svg);
+    background-position: center center;
+    background-size: contain;
+    background-origin: content-box;
+    cursor: move;
 }
 
 /* #bgm */
@@ -80,9 +93,8 @@ h2 {
 }
 
 #bgm .container {
-    width: 413px;
+    width: auto;
 }
-
 #bgm .discription {
     height: 20px;
     width: 100%;
@@ -98,7 +110,7 @@ h2 {
     background-size: contain;
 }
 #bgm .title {
-    width: 395px;
+    width: 100%;
     font-size: 1.0rem;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -134,12 +146,22 @@ h2 {
 #bgm .seekbar::-webkit-slider-runnable-track {
     background: rgb(170, 170, 170);
 }
+#bgm .seekbar:disabled::-webkit-slider-runnable-track {
+    background: rgb(210, 210, 210);
+}
 #bgm .seekbar::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 10px;
     height: 10px;
     background: rgb(192, 235, 250);
     box-shadow: -100vw 0 0 100vw var(--sky);
+}
+#bgm .seekbar:disabled::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    background: rgb(223, 246, 255);
+    box-shadow: -100vw 0 0 100vw rgb(165, 210, 224);
 }
 
 
@@ -169,7 +191,7 @@ h2 {
 }
 
 #se .container {
-    width: 263px;
+    width: 236px;
 }
 
 #se .discription {

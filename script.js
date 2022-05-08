@@ -1,5 +1,9 @@
+//VueDraggableをインポート
+const draggable = window['vuedraggable'];
+
 /* データベース操作 */
 let database = null;
+let loading = false;
 const databaseName = 'Koukou_Acoustic';
 const storeName = 'setting';
 const mode = { mode: 'read' };
@@ -69,9 +73,14 @@ function loadDataFromDatabase(key) { //async
 let directoryReadable = {
     data: {
         hasHistory: true,
+        nextKey: 1,
     },
     methods: {
         loadAudiosFromDirectory: async function (directoryHandle) {
+            if (this.playingKey > 0) {
+                this.playingKey = 0;
+                this.reqestedKey = 0;
+            }
             this.fileList = await new Promise(async (resolve, reject) => {
                 let fileList = [];
                 let pathRequests = [];
@@ -84,7 +93,7 @@ let directoryReadable = {
                                 fileList.push({
                                     name: file.name,
                                     path: '',
-                                    key: idx + 1,
+                                    key: this.nextKey + idx,
                                 });
                                 pathRequests.push(
                                     new Promise((resolve, reject) => {
@@ -103,6 +112,7 @@ let directoryReadable = {
                     });
                     ++idx;
                 }
+                this.nextKey += idx;
                 await Promise.all(pathRequests);
                 resolve(fileList);
             });
@@ -131,6 +141,20 @@ let directoryReadable = {
     },
 };
 
+let panelsDraggable = {
+    components: {
+        'draggables': draggable,
+    },
+    data: {
+        dragOptions: {
+            animation: 200,
+            disabled: false,
+            ghostClass: "ghost",
+            handle: '.handle',
+        },
+    }
+};
+
 /* コンポーネント */
 let TimeController = {
     props: {
@@ -149,6 +173,10 @@ let TimeController = {
                 return val >= 0 || val == -1;
             },
         },
+        canPlay: {
+            type: Boolean,
+            required: true,
+        },
     },
     template: `<div class="controller">
         <div class="time">
@@ -157,9 +185,9 @@ let TimeController = {
             <label class="time-duration">{{ formatTime(duration) }}</label>
         </div>
         <input
-            type="range"
-            min="0" :max="duration" step="0.001" :value="displayedCurrentTime"
-            class="seekbar"
+            type="range" class="seekbar"
+            min="0" :max="duration" step="0.001" :value="displayedCurrentTime" 
+            :disabled="!canPlay"
             @mousedown="onMouseDown" @input="onDragging" @mouseup="onMouseUp"
         >
     </div>`,
@@ -243,11 +271,13 @@ let BgmPlayer = {
                 <div class="note"></div>
                 <label class="title">{{ file.name }}</label>
             </div>
-        <TimeController
-            :currentTime="currentTime" :duration="duration"
-            @change-current-time="onChangeCurrentTime"
-        ></TimeController>
+            <TimeController
+                :currentTime="currentTime" :duration="duration"
+                :canPlay="canPlay"
+                @change-current-time="onChangeCurrentTime"
+            ></TimeController>
         </div>
+        <div class="handle"></div>
     </div>`,
     components: {
         TimeController,
@@ -258,7 +288,7 @@ let BgmPlayer = {
             duration: -1,
 
             playerStatus: 'pausing',
-            canPlay: true,
+            canPlay: false,
             fadeOutDuration: 1000, //const
         };
     },
@@ -283,6 +313,7 @@ let BgmPlayer = {
     },
     methods: {
         onLoadedMetaData: function (e) {
+            this.canPlay = true;
             this.duration = $(e.target).prop('duration');
         },
         onTimeUpdate: function (e) {
@@ -335,7 +366,7 @@ let SePlayer = {
                 :src="file.path" preload="metadata"
                 v-for="idx in audioMax" :key="idx-1"
                 :data-key="idx-1"
-                @ended="onEnded"
+                @loadedmetadata="onLoadedMetaData" @ended="onEnded"
             ></audio>
         </div>
         <button
@@ -351,11 +382,13 @@ let SePlayer = {
             </div>
             <div class="cancel"></div>
         </div>
+        <div class="handle"></div>
     </div>`,
     data: function () {
         return {
             isPlaying: [false, false, false, false, false],
             audioMax: 5, //const
+            loadedAudiosNum: 0,
         };
     },
     computed: {
@@ -372,10 +405,13 @@ let SePlayer = {
             return this.playingNum > 0;
         },
         canPlay: function () {
-            return this.playingNum < this.audioMax;
+            return this.loadedAudiosNum >= this.audioMax && this.playingNum < this.audioMax;
         },
     },
     methods: {
+        onLoadedMetaData: function () {
+            ++this.loadedAudiosNum;
+        },
         onPlay: function (e) {
             let el = this.$el;
             let that = this;
@@ -412,8 +448,9 @@ $(document).ready(function () {
         name: 'BGM',
         components: {
             'bgm-player': BgmPlayer,
+            'draggable': draggable,
         },
-        mixins: [directoryReadable],
+        mixins: [directoryReadable, panelsDraggable],
         data: {
             dirKey: 'bgm',
             //key==0: 再生中のplayer無し
@@ -449,7 +486,7 @@ $(document).ready(function () {
         components: {
             'se-player': SePlayer,
         },
-        mixins: [directoryReadable],
+        mixins: [directoryReadable, panelsDraggable],
         data: {
             dirKey: 'se',
             fileList: [],
