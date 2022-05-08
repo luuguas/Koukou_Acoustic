@@ -72,24 +72,34 @@ function loadDataFromDatabase(key) { //async
 /* ミックスイン */
 let directoryReadable = {
     data: {
+        indexs: {},
         hasHistory: true,
         nextKey: 1,
     },
     methods: {
-        loadAudiosFromDirectory: async function (directoryHandle) {
+        loadAudiosFromDirectory: async function (directoryHandle, indexsHistory) {
             if (this.playingKey > 0) {
                 this.playingKey = 0;
                 this.reqestedKey = 0;
             }
+            let indexs = {};
             this.fileList = await new Promise(async (resolve, reject) => {
                 let fileList = [];
                 let pathRequests = [];
                 let idx = 0;
+                let extraIdx = indexsHistory.num;
                 for await (let handle of directoryHandle.values()) {
                     await new Promise(async (resolve, reject) => {
                         if (handle.kind === 'file') {
                             let file = await handle.getFile();
                             if (file.type.match('audio.*')) {
+                                if (indexsHistory[file.name] === undefined) {
+                                    indexs[file.name] = extraIdx++;
+                                }
+                                else {
+                                    indexs[file.name] = indexsHistory[file.name];
+                                }
+
                                 fileList.push({
                                     name: file.name,
                                     path: '',
@@ -106,28 +116,37 @@ let directoryReadable = {
                                         reader.readAsDataURL(file);
                                     })
                                 );
+                                ++idx;
                             }
                         }
                         resolve();
                     });
-                    ++idx;
                 }
+                indexs['num'] = idx;
                 this.nextKey += idx;
                 await Promise.all(pathRequests);
+                fileList.sort((l, r) => {
+                    return indexs[l.name] - indexs[r.name];
+                });
+                $.each(fileList, function (idx, val) {
+                    indexs[val.name] = idx;
+                });
                 resolve(fileList);
             });
+            saveDataToDatabase(this.idxsKey, indexs);
         },
         onLoadLastFolder: async function (e) {
             let directoryHandle = await loadDataFromDatabase(this.dirKey);
+            let indexsHistory = await loadDataFromDatabase(this.idxsKey);
             if (await directoryHandle.queryPermission(mode) !== 'granted' && await directoryHandle.requestPermission(mode) !== 'granted') {
                 console.log('loading "' + directoryHandle.name + '" was rejected.');
                 return;
             }
-            this.loadAudiosFromDirectory(directoryHandle);
+            this.loadAudiosFromDirectory(directoryHandle, indexsHistory);
         },
         onOpenFolder: async function (e) {
             let directoryHandle = await window.showDirectoryPicker();
-            this.loadAudiosFromDirectory(directoryHandle);
+            this.loadAudiosFromDirectory(directoryHandle, { num: 0 });
             saveDataToDatabase(this.dirKey, directoryHandle);
         },
     },
@@ -146,12 +165,22 @@ let panelsDraggable = {
         'draggables': draggable,
     },
     data: {
+        indexs: {},
         dragOptions: {
             animation: 200,
             disabled: false,
             ghostClass: "ghost",
             handle: '.handle',
         },
+    },
+    methods: {
+        onEnd: function (e) {
+            let that = this;
+            $.each(this.fileList, function (idx, val) {
+                that.indexs[val.name] = idx;
+            });
+            saveDataToDatabase(this.idxsKey, this.indexs);
+        }
     }
 };
 
@@ -453,6 +482,7 @@ $(document).ready(function () {
         mixins: [directoryReadable, panelsDraggable],
         data: {
             dirKey: 'bgm',
+            idxsKey: 'bgm-indexs',
             //key==0: 再生中のplayer無し
             // key>0: keyに一致するplayerが再生中
             // key<0: -keyに一致するplayerがフェードアウト中
@@ -489,6 +519,7 @@ $(document).ready(function () {
         mixins: [directoryReadable, panelsDraggable],
         data: {
             dirKey: 'se',
+            idxsKey: 'se-indexs',
             fileList: [],
         },
     });
