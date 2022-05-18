@@ -555,6 +555,7 @@ $(document).ready(function () {
                 'Cracker.svg',
                 'Cracker_Disabled.svg',
                 'Cracker_Playing.svg',
+                'Handle.svg',
                 'Note_BGM.svg',
                 'Note_SE.svg',
                 'Pause.svg',
