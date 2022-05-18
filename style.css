@@ -73,6 +73,21 @@ h2 {
     background-color: var(--sky);
 }
 
+#bgm .setting {
+    display: flex;
+    flex-direction: row;
+    align-content: center center;
+}
+#bgm .fadeout {
+    margin-left: 10px;
+}
+#bgm .fadeout-select {
+    padding: 0px 10px 0px 3px;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+}
+
 #bgm .player {
     width: 500px;
     border-color: var(--sky);

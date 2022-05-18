@@ -281,6 +281,10 @@ let BgmPlayer = {
             type: Number,
             required: true,
         },
+        fadeOutDuration: {
+            type: Number,
+            required: true,
+        }
     },
     template: `<div class="player">
         <audio
@@ -318,7 +322,6 @@ let BgmPlayer = {
 
             playerStatus: 'pausing',
             canPlay: false,
-            fadeOutDuration: 1000, //const
         };
     },
     watch: {
@@ -364,6 +367,11 @@ let BgmPlayer = {
             $(this.$el).find('audio').trigger('play');
         },
         fadeOutAudio: function () {
+            if (this.fadeOutDuration == 0) {
+                $(this.$el).find('audio').trigger('pause');
+                this.$emit('standby');
+                return;
+            }
             this.playerStatus = 'fading';
             let that = this;
             let fadeVolume = setInterval(function (audio, startTime, duration) {
@@ -481,16 +489,21 @@ $(document).ready(function () {
         },
         mixins: [directoryReadable, panelsDraggable],
         data: {
-            dirKey: 'bgm',
-            idxsKey: 'bgm-indexs',
+            dirKey: 'bgm',             //const
+            fadeOutKey: 'bgm-fadeout', //const
+            idxsKey: 'bgm-indexs',     //const
             //key==0: 再生中のplayer無し
             // key>0: keyに一致するplayerが再生中
             // key<0: -keyに一致するplayerがフェードアウト中
             playingKey: 0,
             requestedKey: 0,
             fileList: [],
+            fadeOutDuration: 0.0,
         },
         methods: {
+            onFadeOutDurationChange: function (e) {
+                saveDataToDatabase(this.fadeOutKey, Number(e.target.value));
+            },
             onPlayRequest: function (key) {
                 this.requestedKey = key;
                 if (this.playingKey == 0) {
@@ -509,6 +522,15 @@ $(document).ready(function () {
                 }
             },
         },
+        created: async function () {
+            let request = await loadDataFromDatabase(this.fadeOutKey);
+            if (request === null) {
+                this.fadeOutDuration = 1000;
+            }
+            else {
+                this.fadeOutDuration = request;
+            }
+        }
     });
     new Vue({
         el: '#se',
@@ -518,8 +540,8 @@ $(document).ready(function () {
         },
         mixins: [directoryReadable, panelsDraggable],
         data: {
-            dirKey: 'se',
-            idxsKey: 'se-indexs',
+            dirKey: 'se',         //const
+            idxsKey: 'se-indexs', //const
             fileList: [],
         },
     });
