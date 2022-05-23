@@ -17,17 +17,10 @@
     <div id="bgm">
         <h2>BGM</h2>
         <div class="setting">
-            <div class="file">
-                <button
-                    type="button" class="load-last-folder"
-                    :disabled="!hasHistory"
-                @click="onLoadLastFolder"
-                >前回のフォルダを開く</button>
-                <button
-                    type="button" class="open-folder"
-                    @click="onOpenFolder"
-                >フォルダを開く...</button>
-            </div>
+            <directory-reader
+                :dir-key="dirKey" :idxs-key="idxsKey"
+                @load-directory="onLoadDirectory"
+            ></directory-reader>
             <div class="fadeout">
                 <label>一時停止時のフェードアウト:</label>
                 <select class="fadeout-select" v-model="fadeOutDuration" @change="onFadeOutDurationChange">
@@ -54,17 +47,10 @@
     </div>
     <div id="se">
         <h2>SE</h2>
-        <div class="file">
-            <button
-                type="button" class="load-last-folder"
-                :disabled="!hasHistory"
-                @click="onLoadLastFolder"
-            >前回のフォルダを開く</button>
-            <button
-                type="button" class="open-folder"
-                @click="onOpenFolder"
-            >フォルダを開く...</button>
-        </div>
+        <directory-reader
+            :dir-key="dirKey" :idxs-key="idxsKey"
+            @load-directory="onLoadDirectory"
+        ></directory-reader>
         <draggable v-model="fileList" v-bind="dragOptions" @end="onEnd">
             <transition-group class="panels">
                 <se-player

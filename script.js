@@ -69,15 +69,72 @@ function loadDataFromDatabase(key) { //async
     });
 }
 
-/* ミックスイン */
-let directoryReadable = {
+
+let DirectoryReader = { //component
+    props: {
+        dirKey: {
+            type: String,
+            required: true,
+        },
+        idxsKey: {
+            type: String,
+            required: true,
+        }
+    },
+    data: function () {
+        return {
+            hasHistory: true,
+        };
+    },
+    template: `<div class="file">
+        <button
+            type="button" class="load-last-folder"
+            :disabled="!hasHistory"
+            @click="onLoadLastFolder"
+        >前回のフォルダを開く</button>
+        <button
+            type="button" class="open-folder"
+            @click="onOpenFolder"
+        >フォルダを開く...</button>
+    </div>`,
+    methods: {
+        onLoadLastFolder: async function (e) {
+            let directoryHandle = await loadDataFromDatabase(this.dirKey);
+            let indexsHistory = await loadDataFromDatabase(this.idxsKey);
+            if (await directoryHandle.queryPermission(mode) !== 'granted' && await directoryHandle.requestPermission(mode) !== 'granted') {
+                console.log('loading "' + directoryHandle.name + '" was rejected.');
+                return;
+            }
+            this.$emit('load-directory', { directoryHandle, indexsHistory });
+        },
+        onOpenFolder: async function (e) {
+            let directoryHandle = await window.showDirectoryPicker();
+            let indexsHistory = { num: 0 };
+            this.$emit('load-directory', { directoryHandle, indexsHistory });
+            saveDataToDatabase(this.dirKey, directoryHandle);
+        },
+    },
+    created: async function () {
+        if (await loadDataFromDatabase(this.dirKey)) {
+            this.hasHistory = true;
+        }
+        else {
+            this.hasHistory = false;
+        }
+    },
+};
+let directoryReadable = { //mixin
     data: {
         indexs: {},
-        hasHistory: true,
         nextKey: 1,
     },
+    components: {
+        DirectoryReader,
+    },
     methods: {
-        loadAudiosFromDirectory: async function (directoryHandle, indexsHistory) {
+        onLoadDirectory: async function (e) {
+            let directoryHandle = e.directoryHandle;
+            let indexsHistory = e.indexsHistory;
             if (this.playingKey > 0) {
                 this.playingKey = 0;
                 this.reqestedKey = 0;
@@ -135,34 +192,12 @@ let directoryReadable = {
             });
             saveDataToDatabase(this.idxsKey, indexs);
         },
-        onLoadLastFolder: async function (e) {
-            let directoryHandle = await loadDataFromDatabase(this.dirKey);
-            let indexsHistory = await loadDataFromDatabase(this.idxsKey);
-            if (await directoryHandle.queryPermission(mode) !== 'granted' && await directoryHandle.requestPermission(mode) !== 'granted') {
-                console.log('loading "' + directoryHandle.name + '" was rejected.');
-                return;
-            }
-            this.loadAudiosFromDirectory(directoryHandle, indexsHistory);
-        },
-        onOpenFolder: async function (e) {
-            let directoryHandle = await window.showDirectoryPicker();
-            this.loadAudiosFromDirectory(directoryHandle, { num: 0 });
-            saveDataToDatabase(this.dirKey, directoryHandle);
-        },
-    },
-    created: async function () {
-        if (await loadDataFromDatabase(this.dirKey)) {
-            this.hasHistory = true;
-        }
-        else {
-            this.hasHistory = false;
-        }
     },
 };
 
-let panelsDraggable = {
+let panelsDraggable = { //mixin
     components: {
-        'draggables': draggable,
+        draggable,
     },
     data: {
         indexs: {},
@@ -184,8 +219,7 @@ let panelsDraggable = {
     }
 };
 
-/* コンポーネント */
-let TimeController = {
+let TimeController = { //component
     props: {
         currentTime: {
             type: Number,
@@ -270,8 +304,7 @@ let TimeController = {
         },
     },
 };
-
-let BgmPlayer = {
+let BgmPlayer = { //component
     props: {
         file: {
             type: Object,
@@ -390,7 +423,7 @@ let BgmPlayer = {
     },
 };
 
-let SePlayer = {
+let SePlayer = { //component
     props: {
         file: {
             type: Object,
@@ -485,7 +518,6 @@ $(document).ready(function () {
         name: 'BGM',
         components: {
             'bgm-player': BgmPlayer,
-            'draggable': draggable,
         },
         mixins: [directoryReadable, panelsDraggable],
         data: {
