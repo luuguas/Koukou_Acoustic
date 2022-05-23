@@ -86,17 +86,14 @@ let DirectoryReader = { //component
             hasHistory: true,
         };
     },
-    template: `<div class="file">
-        <button
-            type="button" class="load-last-folder"
-            :disabled="!hasHistory"
-            @click="onLoadLastFolder"
-        >前回のフォルダを開く</button>
-        <button
-            type="button" class="open-folder"
-            @click="onOpenFolder"
-        >フォルダを開く...</button>
-    </div>`,
+    created: async function () {
+        if (await loadDataFromDatabase(this.dirKey)) {
+            this.hasHistory = true;
+        }
+        else {
+            this.hasHistory = false;
+        }
+    },
     methods: {
         onLoadLastFolder: async function (e) {
             let directoryHandle = await loadDataFromDatabase(this.dirKey);
@@ -114,22 +111,25 @@ let DirectoryReader = { //component
             saveDataToDatabase(this.dirKey, directoryHandle);
         },
     },
-    created: async function () {
-        if (await loadDataFromDatabase(this.dirKey)) {
-            this.hasHistory = true;
-        }
-        else {
-            this.hasHistory = false;
-        }
-    },
+    template: `<div class="file">
+        <button
+            type="button" class="load-last-folder"
+            :disabled="!hasHistory"
+            @click="onLoadLastFolder"
+        >前回のフォルダを開く</button>
+        <button
+            type="button" class="open-folder"
+            @click="onOpenFolder"
+        >フォルダを開く...</button>
+    </div>`,
 };
 let directoryReadable = { //mixin
+    components: {
+        DirectoryReader,
+    },
     data: {
         indexs: {},
         nextKey: 1,
-    },
-    components: {
-        DirectoryReader,
     },
     methods: {
         onLoadDirectory: async function (e) {
@@ -241,19 +241,6 @@ let TimeController = { //component
             required: true,
         },
     },
-    template: `<div class="controller">
-        <div class="time">
-            <label class="time-current">{{ formatTime(displayedCurrentTime) }}</label>
-            <label class="time-div">/</label>
-            <label class="time-duration">{{ formatTime(duration) }}</label>
-        </div>
-        <input
-            type="range" class="seekbar"
-            min="0" :max="duration" step="0.001" :value="displayedCurrentTime" 
-            :disabled="!canPlay"
-            @mousedown="onMouseDown" @input="onDragging" @mouseup="onMouseUp"
-        >
-    </div>`,
     data: function () {
         return {
             isDragging: 0, //0:非ドラッグ / 1:mouseup直後,currentTime変更前 / 2:ドラッグ中
@@ -303,8 +290,24 @@ let TimeController = { //component
             this.isDragging = 1;
         },
     },
+    template: `<div class="controller">
+        <div class="time">
+            <label class="time-current">{{ formatTime(displayedCurrentTime) }}</label>
+            <label class="time-div">/</label>
+            <label class="time-duration">{{ formatTime(duration) }}</label>
+        </div>
+        <input
+            type="range" class="seekbar"
+            min="0" :max="duration" step="0.001" :value="displayedCurrentTime" 
+            :disabled="!canPlay"
+            @mousedown="onMouseDown" @input="onDragging" @mouseup="onMouseUp"
+        >
+    </div>`,
 };
 let BgmPlayer = { //component
+    components: {
+        TimeController,
+    },
     props: {
         file: {
             type: Object,
@@ -318,35 +321,6 @@ let BgmPlayer = { //component
             type: Number,
             required: true,
         }
-    },
-    template: `<div class="player">
-        <audio
-            :src="file.path"
-            preload="metadata"
-            @loadedmetadata="onLoadedMetaData"
-            @timeupdate="onTimeUpdate"
-        ></audio>
-        <button
-            type="button" class="play"
-            :class="[ playerStatus ]"
-            :disabled="!canPlay"
-            @click="onClick"
-        ></button>
-        <div class="container">
-            <div class="discription">
-                <div class="note"></div>
-                <span class="title">{{ file.name }}</span>
-            </div>
-            <TimeController
-                :currentTime="currentTime" :duration="duration"
-                :canPlay="canPlay"
-                @change-current-time="onChangeCurrentTime"
-            ></TimeController>
-        </div>
-        <div class="handle"></div>
-    </div>`,
-    components: {
-        TimeController,
     },
     data: function () {
         return {
@@ -390,11 +364,11 @@ let BgmPlayer = { //component
         onChangeCurrentTime: function (newCurrentTime) {
             $(this.$el).find('audio').prop('currentTime', newCurrentTime);
         },
-
+        
         onClick: function (e) {
             this.$emit('play-request', this.file.key);
         },
-
+        
         playAudio: function () {
             this.playerStatus = 'playing';
             $(this.$el).find('audio').trigger('play');
@@ -418,9 +392,35 @@ let BgmPlayer = { //component
                     that.$emit('standby');
                 }
             }, 50,
-                $(this.$el).find('audio'), Date.now(), this.fadeOutDuration);
+            $(this.$el).find('audio'), Date.now(), this.fadeOutDuration);
         },
     },
+    template: `<div class="player">
+        <audio
+            :src="file.path"
+            preload="metadata"
+            @loadedmetadata="onLoadedMetaData"
+            @timeupdate="onTimeUpdate"
+        ></audio>
+        <button
+            type="button" class="play"
+            :class="[ playerStatus ]"
+            :disabled="!canPlay"
+            @click="onClick"
+        ></button>
+        <div class="container">
+            <div class="discription">
+                <div class="note"></div>
+                <span class="title">{{ file.name }}</span>
+            </div>
+            <TimeController
+                :currentTime="currentTime" :duration="duration"
+                :canPlay="canPlay"
+                @change-current-time="onChangeCurrentTime"
+            ></TimeController>
+        </div>
+        <div class="handle"></div>
+    </div>`,
 };
 
 let SePlayer = { //component
@@ -430,30 +430,6 @@ let SePlayer = { //component
             required: true,
         }
     },
-    template: `<div class="player">
-        <div class="audios">
-            <audio
-                :src="file.path" preload="metadata"
-                v-for="idx in audioMax" :key="idx-1"
-                :data-key="idx-1"
-                @loadedmetadata="onLoadedMetaData" @ended="onEnded"
-            ></audio>
-        </div>
-        <button
-            type="button" class="play"
-            :class="{ playing: playingAny }"
-            :disabled="!canPlay"
-            @click="onPlay"
-        ></button>
-        <div class="container">
-            <div class="discription">
-                <div class="note"></div>
-                <span class="title">{{ file.name }}</span>
-            </div>
-            <div class="cancel"></div>
-        </div>
-        <div class="handle"></div>
-    </div>`,
     data: function () {
         return {
             isPlaying: [false, false, false, false, false],
@@ -499,7 +475,7 @@ let SePlayer = { //component
                 $(this).remove();
             });
             $(el).find('.cancel').append(cancelButton);
-
+            
             $(audio).trigger('play');
             Vue.set(this.isPlaying, idx, true);
         },
@@ -509,6 +485,30 @@ let SePlayer = { //component
             $(this.$el).find('.cancel>button[data-key="' + idx + '"]').remove();
         }
     },
+    template: `<div class="player">
+        <div class="audios">
+            <audio
+                :src="file.path" preload="metadata"
+                v-for="idx in audioMax" :key="idx-1"
+                :data-key="idx-1"
+                @loadedmetadata="onLoadedMetaData" @ended="onEnded"
+            ></audio>
+        </div>
+        <button
+            type="button" class="play"
+            :class="{ playing: playingAny }"
+            :disabled="!canPlay"
+            @click="onPlay"
+        ></button>
+        <div class="container">
+            <div class="discription">
+                <div class="note"></div>
+                <span class="title">{{ file.name }}</span>
+            </div>
+            <div class="cancel"></div>
+        </div>
+        <div class="handle"></div>
+    </div>`,
 };
 
 $(document).ready(function () {
@@ -532,6 +532,15 @@ $(document).ready(function () {
             fileList: [],
             fadeOutDuration: 0.0,
         },
+        created: async function () {
+            let request = await loadDataFromDatabase(this.fadeOutKey);
+            if (request === null) {
+                this.fadeOutDuration = 1000;
+            }
+            else {
+                this.fadeOutDuration = request;
+            }
+        },
         methods: {
             onFadeOutDurationChange: function (e) {
                 saveDataToDatabase(this.fadeOutKey, Number(e.target.value));
@@ -554,15 +563,6 @@ $(document).ready(function () {
                 }
             },
         },
-        created: async function () {
-            let request = await loadDataFromDatabase(this.fadeOutKey);
-            if (request === null) {
-                this.fadeOutDuration = 1000;
-            }
-            else {
-                this.fadeOutDuration = request;
-            }
-        }
     });
     new Vue({
         el: '#se',
