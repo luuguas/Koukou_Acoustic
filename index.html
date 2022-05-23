@@ -14,51 +14,9 @@
 </head>
 
 <body>
-    <div id="bgm">
-        <h2>BGM</h2>
-        <div class="setting">
-            <directory-reader
-                :dir-key="dirKey" :idxs-key="idxsKey"
-                @load-directory="onLoadDirectory"
-            ></directory-reader>
-            <div class="fadeout">
-                <label>一時停止時のフェードアウト:</label>
-                <select class="fadeout-select" v-model="fadeOutDuration" @change="onFadeOutDurationChange">
-                    <option :value="0" selected>なし</option>
-                    <option :value="500">0.5秒</option>
-                    <option :value="1000">1.0秒</option>
-                    <option :value="1500">1.5秒</option>
-                    <option :value="2000">2.0秒</option>
-                    <option :value="2500">2.5秒</option>
-                    <option :value="3000">3.0秒</option>
-                </select>
-            </div>
-        </div>
-        <draggable v-model="fileList" v-bind="dragOptions" @end="onEnd">
-            <transition-group class="panels">
-                <bgm-player
-                    :file="file" :playing-key="playingKey" :fade-out-duration="fadeOutDuration"
-                    v-for="file in fileList" :key="file.key"
-                    @play-request="onPlayRequest"
-                    @standby="onStandby"
-                ></bgm-player>
-            </transition-group>
-        </draggable>
-    </div>
-    <div id="se">
-        <h2>SE</h2>
-        <directory-reader
-            :dir-key="dirKey" :idxs-key="idxsKey"
-            @load-directory="onLoadDirectory"
-        ></directory-reader>
-        <draggable v-model="fileList" v-bind="dragOptions" @end="onEnd">
-            <transition-group class="panels">
-                <se-player
-                    :file="file"
-                    v-for="file in fileList" :key="file.key"
-                ></se-player>
-            </transition-group>
-        </draggable>
+    <div id="app">
+        <bgm></bgm>
+        <se></se>
     </div>
     <div id="preload" hidden>
         <img :src="path" v-for="path in pathList">

@@ -127,9 +127,11 @@ let directoryReadable = { //mixin
     components: {
         DirectoryReader,
     },
-    data: {
-        indexs: {},
-        nextKey: 1,
+    data: function () {
+        return {
+            indexs: {},
+            nextKey: 1,
+        };
     },
     methods: {
         onLoadDirectory: async function (e) {
@@ -199,14 +201,16 @@ let panelsDraggable = { //mixin
     components: {
         draggable,
     },
-    data: {
-        indexs: {},
-        dragOptions: {
-            animation: 200,
-            disabled: false,
-            ghostClass: "ghost",
-            handle: '.handle',
-        },
+    data: function () {
+        return {
+            indexs: {},
+            dragOptions: {
+                animation: 200,
+                disabled: false,
+                ghostClass: "ghost",
+                handle: '.handle',
+            },
+        };
     },
     methods: {
         onEnd: function (e) {
@@ -364,11 +368,11 @@ let BgmPlayer = { //component
         onChangeCurrentTime: function (newCurrentTime) {
             $(this.$el).find('audio').prop('currentTime', newCurrentTime);
         },
-        
+
         onClick: function (e) {
             this.$emit('play-request', this.file.key);
         },
-        
+
         playAudio: function () {
             this.playerStatus = 'playing';
             $(this.$el).find('audio').trigger('play');
@@ -392,7 +396,7 @@ let BgmPlayer = { //component
                     that.$emit('standby');
                 }
             }, 50,
-            $(this.$el).find('audio'), Date.now(), this.fadeOutDuration);
+                $(this.$el).find('audio'), Date.now(), this.fadeOutDuration);
         },
     },
     template: `<div class="player">
@@ -420,6 +424,88 @@ let BgmPlayer = { //component
             ></TimeController>
         </div>
         <div class="handle"></div>
+    </div>`,
+};
+let Bgm = { //component
+    components: {
+        BgmPlayer,
+    },
+    mixins: [directoryReadable, panelsDraggable],
+    data: function () {
+        return {
+            dirKey: 'bgm',             //const
+            fadeOutKey: 'bgm-fadeout', //const
+            idxsKey: 'bgm-indexs',     //const
+            //key==0: 再生中のplayer無し
+            // key>0: keyに一致するplayerが再生中
+            // key<0: -keyに一致するplayerがフェードアウト中
+            playingKey: 0,
+            requestedKey: 0,
+            fileList: [],
+            fadeOutDuration: 0.0,
+        };
+    },
+    created: async function () {
+        let request = await loadDataFromDatabase(this.fadeOutKey);
+        if (request === null) {
+            this.fadeOutDuration = 1000;
+        }
+        else {
+            this.fadeOutDuration = request;
+        }
+    },
+    methods: {
+        onFadeOutDurationChange: function (e) {
+            saveDataToDatabase(this.fadeOutKey, Number(e.target.value));
+        },
+        onPlayRequest: function (key) {
+            this.requestedKey = key;
+            if (this.playingKey == 0) {
+                this.playingKey = key;
+            }
+            else {
+                this.playingKey = -this.playingKey
+            }
+        },
+        onStandby: function () {
+            if (this.playingKey == -this.requestedKey) {
+                this.playingKey = 0;
+            }
+            else {
+                this.playingKey = this.requestedKey;
+            }
+        },
+    },
+    template: `<div id="bgm">
+        <h2>BGM</h2>
+        <div class="setting">
+            <DirectoryReader
+                :dirKey="dirKey" :idxsKey="idxsKey"
+                @load-directory="onLoadDirectory"
+            ></DirectoryReader>
+            <div class="fadeout">
+                <label>一時停止時のフェードアウト:</label>
+                <select class="fadeout-select" v-model="fadeOutDuration" @change="onFadeOutDurationChange">
+                    <option :value="0" selected>なし</option>
+                    <option :value="500">0.5秒</option>
+                    <option :value="1000">1.0秒</option>
+                    <option :value="1500">1.5秒</option>
+                    <option :value="2000">2.0秒</option>
+                    <option :value="2500">2.5秒</option>
+                    <option :value="3000">3.0秒</option>
+                </select>
+            </div>
+        </div>
+        <draggable v-model="fileList" v-bind="dragOptions" @end="onEnd">
+            <transition-group class="panels">
+                <BgmPlayer
+                    :file="file" :playingKey="playingKey" :fadeOutDuration="fadeOutDuration"
+                    v-for="file in fileList" :key="file.key"
+                    @play-request="onPlayRequest"
+                    @standby="onStandby"
+                ></BgmPlayer>
+            </transition-group>
+        </draggable>
     </div>`,
 };
 
@@ -475,7 +561,7 @@ let SePlayer = { //component
                 $(this).remove();
             });
             $(el).find('.cancel').append(cancelButton);
-            
+
             $(audio).trigger('play');
             Vue.set(this.isPlaying, idx, true);
         },
@@ -510,75 +596,45 @@ let SePlayer = { //component
         <div class="handle"></div>
     </div>`,
 };
-
-$(document).ready(function () {
-    //playerを追加
-    new Vue({
-        el: '#bgm',
-        name: 'BGM',
-        components: {
-            'bgm-player': BgmPlayer,
-        },
-        mixins: [directoryReadable, panelsDraggable],
-        data: {
-            dirKey: 'bgm',             //const
-            fadeOutKey: 'bgm-fadeout', //const
-            idxsKey: 'bgm-indexs',     //const
-            //key==0: 再生中のplayer無し
-            // key>0: keyに一致するplayerが再生中
-            // key<0: -keyに一致するplayerがフェードアウト中
-            playingKey: 0,
-            requestedKey: 0,
-            fileList: [],
-            fadeOutDuration: 0.0,
-        },
-        created: async function () {
-            let request = await loadDataFromDatabase(this.fadeOutKey);
-            if (request === null) {
-                this.fadeOutDuration = 1000;
-            }
-            else {
-                this.fadeOutDuration = request;
-            }
-        },
-        methods: {
-            onFadeOutDurationChange: function (e) {
-                saveDataToDatabase(this.fadeOutKey, Number(e.target.value));
-            },
-            onPlayRequest: function (key) {
-                this.requestedKey = key;
-                if (this.playingKey == 0) {
-                    this.playingKey = key;
-                }
-                else {
-                    this.playingKey = -this.playingKey
-                }
-            },
-            onStandby: function () {
-                if (this.playingKey == -this.requestedKey) {
-                    this.playingKey = 0;
-                }
-                else {
-                    this.playingKey = this.requestedKey;
-                }
-            },
-        },
-    });
-    new Vue({
-        el: '#se',
-        name: 'SE',
-        components: {
-            'se-player': SePlayer,
-        },
-        mixins: [directoryReadable, panelsDraggable],
-        data: {
+let Se = { //component
+    components: {
+        SePlayer,
+    },
+    mixins: [directoryReadable, panelsDraggable],
+    data: function () {
+        return {
             dirKey: 'se',         //const
             idxsKey: 'se-indexs', //const
             fileList: [],
+        };
+    },
+    template: `<div id="se">
+        <h2>SE</h2>
+        <DirectoryReader
+            :dirKey="dirKey" :idxsKey="idxsKey"
+            @load-directory="onLoadDirectory"
+        ></DirectoryReader>
+        <draggable v-model="fileList" v-bind="dragOptions" @end="onEnd">
+            <transition-group class="panels">
+                <SePlayer
+                    :file="file"
+                    v-for="file in fileList" :key="file.key"
+                ></SePlayer>
+            </transition-group>
+        </draggable>
+    </div>`,
+};
+
+$(document).ready(function () {
+    new Vue({
+        el: '#app',
+        name: 'App',
+        components: {
+            Bgm,
+            Se,
         },
     });
 
-    //画像のプリロード
     new Vue({
         el: '#preload',
         name: 'Preload',
