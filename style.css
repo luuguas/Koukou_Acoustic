@@ -37,6 +37,13 @@ h2 {
 .player.ghost {
     opacity: 0.3;
 }
+.title {
+    width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 .file {
     margin: 0 0 5px 10px;
 }
@@ -127,12 +134,6 @@ h2 {
     background-image: url(image/Note_BGM.svg);
     background-position: center center;
     background-size: contain;
-}
-#bgm .title {
-    width: 100%;
-    font-size: 1.0rem;
-    text-overflow: ellipsis;
-    overflow: hidden;
 }
 
 #bgm .controller {
@@ -228,11 +229,6 @@ h2 {
     background-image: url(image/Note_SE.svg);
     background-position: center center;
     background-size: contain;
-}
-#se .title {
-    font-size: 1.0rem;
-    text-overflow: ellipsis;
-    overflow: hidden;
 }
 
 #se .cancel {
