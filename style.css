@@ -1,8 +1,8 @@
 :root {
-    --sky: rgb(58, 171, 210);
-    --pale-sky: rgb(240, 251, 255);
-    --green: rgb(100, 220, 0);
-    --pale-green: rgb(236, 255, 223);
+    --sky: #3aabd2;
+    --pale-sky: #f0fbff;
+    --green: #63db00;
+    --pale-green: #ecffdf;
     --min-height: 150px;
 }
 body {
@@ -15,7 +15,7 @@ h2 {
     margin: 10px 0px;
     padding: 10px 10px;
     font-size: 1.5rem;
-    color: white;
+    color: #fff;
 }
 .panels {
     margin-bottom: 50px;
@@ -45,11 +45,11 @@ h2 {
     padding: 5px 10px;
     border-radius: 3px;
     font-size: 0.9rem;
-    background-color: rgb(230, 230, 230);
+    background-color: #e6e6e6;
 }
 .file button:disabled {
-    color:rgb(170, 170, 170);
-    background-color: rgb(235, 235, 235);
+    color:#aaa;
+    background-color: #ebebeb;
 }
 .play {
     height: 50px;
@@ -163,24 +163,24 @@ h2 {
     cursor: pointer;
 }
 #bgm .seekbar::-webkit-slider-runnable-track {
-    background: rgb(170, 170, 170);
+    background: #aaa;
 }
 #bgm .seekbar:disabled::-webkit-slider-runnable-track {
-    background: rgb(210, 210, 210);
+    background: #ddd;
 }
 #bgm .seekbar::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 10px;
     height: 10px;
-    background: rgb(192, 235, 250);
+    background: #c0ebfa;
     box-shadow: -100vw 0 0 100vw var(--sky);
 }
 #bgm .seekbar:disabled::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 10px;
     height: 10px;
-    background: rgb(223, 246, 255);
-    box-shadow: -100vw 0 0 100vw rgb(165, 210, 224);
+    background: #dff6ff;
+    box-shadow: -100vw 0 0 100vw #a5d2e0;
 }
 
 
