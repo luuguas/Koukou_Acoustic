@@ -146,10 +146,15 @@ let DirectoryReader = { //component
             this.$emit('load-directory', { directoryHandle, indexsHistory });
         },
         onOpenFolder: async function (e) {
-            let directoryHandle = await window.showDirectoryPicker();
-            let indexsHistory = { num: 0 };
-            this.$emit('load-directory', { directoryHandle, indexsHistory });
-            saveDataToDatabase(this.dirKey, directoryHandle);
+            try {
+                let directoryHandle = await window.showDirectoryPicker();
+                let indexsHistory = { num: 0 };
+                this.$emit('load-directory', { directoryHandle, indexsHistory });
+                saveDataToDatabase(this.dirKey, directoryHandle);
+            }
+            catch (e) {
+                console.log(e.message);
+            }
         },
     },
     template: `<div class="file">
