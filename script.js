@@ -28,7 +28,7 @@ function getDatabase(databaseName) {
             newDatabase.createObjectStore(storeName, { keyPath: 'key' });
         };
         openRequest.onsuccess = (e) => {
-            console.log('Succeeded in getting Database.');
+            //console.log('Succeeded in getting Database.');
             resolve(e.target.result);
         };
     });
@@ -46,7 +46,7 @@ function saveDataToDatabase(key, value) {
             reject(false);
         };
         addRequest.onsuccess = () => {
-            console.log('Succeeded in saving "' + key + '".');
+            //console.log('Succeeded in saving "' + key + '".');
             resolve(true);
         };
     });
@@ -65,11 +65,11 @@ function getDataFromDatabase(key) {
         };
         getRequest.onsuccess = (e) => {
             if (e.target.result) {
-                console.log('Succeeded in loading "' + key + '".');
+                //console.log('Succeeded in loading "' + key + '".');
                 resolve(e.target.result.value);
             }
             else {
-                console.log('Succeeded in loading "' + key + '", but it was undefined.');
+                //console.log('Succeeded in loading "' + key + '", but it was undefined.');
                 resolve(null);
             }
         }
@@ -88,7 +88,7 @@ function deleteDataFromDatabase(key) {
             reject(false);
         };
         deleteRequest.onsuccess = () => {
-            console.log('Succeeded in deleting "' + key + '".');
+            //console.log('Succeeded in deleting "' + key + '".');
             resolve(true);
         };
     });
@@ -157,7 +157,7 @@ let DirectoryReader = { //component
         onLoadLastFolder: async function (e) {
             let directoryHandle = await getDataFromDatabase(this.dirKey);
             if (await directoryHandle.queryPermission(mode) !== 'granted' && await directoryHandle.requestPermission(mode) !== 'granted') {
-                console.log('loading "' + directoryHandle.name + '" was rejected.');
+                //console.log('loading "' + directoryHandle.name + '" was rejected.');
                 return;
             }
             this.$emit('load-directory', directoryHandle);
@@ -169,7 +169,7 @@ let DirectoryReader = { //component
                 saveDataToDatabase(this.dirKey, directoryHandle);
             }
             catch (e) {
-                console.log(e.message);
+                //console.log(e.message);
             }
         },
     },
