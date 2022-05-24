@@ -218,50 +218,60 @@ let directoryReadable = { //mixin
                 let pathRequests = [];
                 let idx = 0;
                 let extraIdx = indexsHistory.num;
-                for await (let handle of directoryHandle.values()) {
-                    await new Promise(async (resolve, reject) => {
-                        if (handle.kind === 'file') {
-                            let file = await handle.getFile();
-                            if (file.type.match('audio.*')) {
-                                if (indexsHistory[file.name] === undefined) {
-                                    indexs[file.name] = extraIdx++;
-                                }
-                                else {
-                                    indexs[file.name] = indexsHistory[file.name];
-                                }
+                try {
+                    for await (let handle of directoryHandle.values()) {
+                        await new Promise(async (resolve, reject) => {
+                            if (handle.kind === 'file') {
+                                let file = await handle.getFile();
+                                if (file.type.match('audio.*')) {
+                                    if (indexsHistory[file.name] === undefined) {
+                                        indexs[file.name] = extraIdx++;
+                                    }
+                                    else {
+                                        indexs[file.name] = indexsHistory[file.name];
+                                    }
 
-                                fileList.push({
-                                    name: file.name,
-                                    path: '',
-                                    key: this.nextKey + idx,
-                                });
-                                pathRequests.push(
-                                    new Promise((resolve, reject) => {
-                                        let i = idx;
-                                        let reader = new FileReader();
-                                        reader.onload = (e) => {
-                                            fileList[i].path = e.target.result;
-                                            resolve();
-                                        };
-                                        reader.readAsDataURL(file);
-                                    })
-                                );
-                                ++idx;
+                                    fileList.push({
+                                        name: file.name,
+                                        path: '',
+                                        key: this.nextKey + idx,
+                                    });
+                                    pathRequests.push(
+                                        new Promise((resolve, reject) => {
+                                            let i = idx;
+                                            let reader = new FileReader();
+                                            reader.onload = (e) => {
+                                                fileList[i].path = e.target.result;
+                                                resolve();
+                                            };
+                                            reader.readAsDataURL(file);
+                                        })
+                                    );
+                                    ++idx;
+                                }
                             }
-                        }
-                        resolve();
+                            resolve();
+                        });
+                    }
+                    indexs['num'] = idx;
+                    this.nextKey += idx;
+                    await Promise.all(pathRequests);
+                    fileList.sort((l, r) => {
+                        return indexs[l.name] - indexs[r.name];
                     });
+                    $.each(fileList, function (idx, val) {
+                        indexs[val.name] = idx;
+                    });
+                    resolve(fileList);
+                } catch (e) {
+                    if (e.name === 'NotFoundError') {
+                        window.alert('フォルダ「' + directoryHandle.name + '」が見つかりませんでした。 [フォルダを開く...]から再度読み込んでください。');
+                    }
+                    else {
+                        console.error(e);
+                    }
+                    resolve([]);
                 }
-                indexs['num'] = idx;
-                this.nextKey += idx;
-                await Promise.all(pathRequests);
-                fileList.sort((l, r) => {
-                    return indexs[l.name] - indexs[r.name];
-                });
-                $.each(fileList, function (idx, val) {
-                    indexs[val.name] = idx;
-                });
-                resolve(fileList);
             });
             this.saveIndexs(directoryHandle, indexs);
             this.hasDirectoryHistory = true;
