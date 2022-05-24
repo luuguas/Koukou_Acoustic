@@ -11,9 +11,16 @@ body {
 }
 
 /* common */
+h1 {
+    margin-bottom: 5px;
+    padding: 5px 10px;
+    font-size: xx-large;
+    color: #333;
+}
+
 h2 {
     margin: 10px 0px;
-    padding: 10px 10px;
+    padding: 10px;
     font-size: 1.5rem;
     color: #fff;
 }
@@ -44,17 +51,20 @@ h2 {
     overflow: hidden;
 }
 
+.general {
+    margin: 0 0 20px 10px;
+}
 .file {
     margin: 0 0 5px 10px;
 }
-.file button {
+.file button, .general button {
     margin: 0px 2px;
     padding: 5px 10px;
     border-radius: 3px;
     font-size: 0.9rem;
     background-color: #e6e6e6;
 }
-.file button:disabled {
+.file button:disabled, .general button:disabled {
     color:#aaa;
     background-color: #ebebeb;
 }
