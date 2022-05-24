@@ -19,13 +19,19 @@
         <div class="general">
             <button
                 type="button" class="load-last-folder"
+                :disabled="!hasDirectoryHistory"
+                @click="onLoadLastFolder"
             >(一括)前回のフォルダを開く</button>
             <button
                 type="button" class="delete-indexs-histories"
+                :disabled="!hasIndexsHistories"
+                @click="onDeleteIndexsHistories"
             >並び替え履歴を削除する</button>
         </div>
-        <bgm></bgm>
-        <se></se>
+
+        <!--components-->
+        <bgm @change-history="onChangeHistory"></bgm>
+        <se @change-history="onChangeHistory"></se>
     </div>
     <div id="preload" hidden>
         <img :src="path" v-for="path in pathList">

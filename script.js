@@ -8,7 +8,14 @@ const databaseName = 'Koukou_Acoustic';
 const storeName = 'setting';
 const mode = { mode: 'read' };
 
-function getDatabase(databaseName) { //async
+const bgm_dirKey = 'bgm';
+const bgm_idxsKey = 'bgm-indexs';
+const bgm_fadeOutKey = 'bgm-fadeout';
+const se_dirKey = 'se';
+const se_idxsKey = 'se-indexs';
+
+//データベース操作関数(非同期)
+function getDatabase(databaseName) {
     return new Promise(async (resolve, reject) => {
         let openRequest = indexedDB.open(databaseName);
         openRequest.onerror = () => {
@@ -26,7 +33,7 @@ function getDatabase(databaseName) { //async
         };
     });
 }
-function saveDataToDatabase(key, value) { //async
+function saveDataToDatabase(key, value) {
     return new Promise(async (resolve, reject) => {
         if (!database) {
             database = await getDatabase(databaseName);
@@ -44,7 +51,7 @@ function saveDataToDatabase(key, value) { //async
         };
     });
 }
-function getDataFromDatabase(key) { //async
+function getDataFromDatabase(key) {
     return new Promise(async (resolve, reject) => {
         if (!database) {
             database = await getDatabase(databaseName);
@@ -68,29 +75,52 @@ function getDataFromDatabase(key) { //async
         }
     });
 }
+function deleteDataFromDatabase(key) {
+    return new Promise(async (resolve, reject) => {
+        if (!database) {
+            database = await getDatabase(databaseName);
+        }
+        let trans = database.transaction(storeName, 'readwrite');
+        let store = trans.objectStore(storeName);
+        let deleteRequest = store.delete(key);
+        deleteRequest.onerror = () => {
+            console.error('Failed to delete "' + key + '".');
+            reject(false);
+        };
+        deleteRequest.onsuccess = () => {
+            console.log('Succeeded in deleting "' + key + '".');
+            resolve(true);
+        };
+    });
+}
 
-
+/* コンポーネントとミックスイン */
 let historySavable = { //mixin
     data: function () {
         return {
             dirKey: '',
             idxsKey: '',
-            indexsHistories: [],
             openingDirectory: null,
         };
     },
-    created: async function () {
-        this.indexsHistories = await getDataFromDatabase(this.idxsKey);
-        if (this.indexsHistories === null) {
-            this.indexsHistories = [];
-        }
-    },
     methods: {
+        hasLastLoadedDirectory: async function () {
+            let directoryHandle = await getDataFromDatabase(this.dirKey);
+            return directoryHandle !== null;
+        },
         saveLastLoadedDirectory: function (directoryHandle) {
             saveDataToDatabase(this.dirKey, directoryHandle);
         },
+        getIndexsHistories: async function () {
+            let indexsHistories = await getDataFromDatabase(this.idxsKey);
+            if (indexsHistories === null) {
+                indexsHistories = [];
+            }
+            return indexsHistories;
+        },
         getIndexs: async function (directoryHandle) {
-            for (let x of this.indexsHistories) {
+            let indexsHistories = await this.getIndexsHistories();
+            for (let x of indexsHistories) {
                 if (await directoryHandle.isSameEntry(x.directory)) {
                     return x.indexs;
                 }
@@ -98,15 +128,16 @@ let historySavable = { //mixin
             return { num: 0 };
         },
         saveIndexs: async function (directoryHandle, indexs) {
-            for (let x of this.indexsHistories) {
+            let indexsHistories = await this.getIndexsHistories();
+            for (let x of indexsHistories) {
                 if (await directoryHandle.isSameEntry(x.directory)) {
                     x.indexs = indexs;
-                    saveDataToDatabase(this.idxsKey, this.indexsHistories);
+                    saveDataToDatabase(this.idxsKey, indexsHistories);
                     return;
                 }
             }
-            this.indexsHistories.push({ directory: directoryHandle, indexs });
-            saveDataToDatabase(this.idxsKey, this.indexsHistories);
+            indexsHistories.push({ directory: directoryHandle, indexs });
+            saveDataToDatabase(this.idxsKey, indexsHistories);
         },
     },
 };
@@ -117,39 +148,24 @@ let DirectoryReader = { //component
             type: String,
             required: true,
         },
-        idxsKey: {
-            type: String,
+        hasDirectoryHistory: {
+            type: Boolean,
             required: true,
-        }
-    },
-    data: function () {
-        return {
-            hasHistory: true,
-        };
-    },
-    created: async function () {
-        if (await getDataFromDatabase(this.dirKey)) {
-            this.hasHistory = true;
-        }
-        else {
-            this.hasHistory = false;
-        }
+        },
     },
     methods: {
         onLoadLastFolder: async function (e) {
             let directoryHandle = await getDataFromDatabase(this.dirKey);
-            let indexsHistory = await getDataFromDatabase(this.idxsKey);
             if (await directoryHandle.queryPermission(mode) !== 'granted' && await directoryHandle.requestPermission(mode) !== 'granted') {
                 console.log('loading "' + directoryHandle.name + '" was rejected.');
                 return;
             }
-            this.$emit('load-directory', { directoryHandle, indexsHistory });
+            this.$emit('load-directory', directoryHandle);
         },
         onOpenFolder: async function (e) {
             try {
                 let directoryHandle = await window.showDirectoryPicker();
-                let indexsHistory = { num: 0 };
-                this.$emit('load-directory', { directoryHandle, indexsHistory });
+                this.$emit('load-directory', directoryHandle);
                 saveDataToDatabase(this.dirKey, directoryHandle);
             }
             catch (e) {
@@ -160,7 +176,7 @@ let DirectoryReader = { //component
     template: `<div class="file">
         <button
             type="button" class="load-last-folder"
-            :disabled="!hasHistory"
+            :disabled="!hasDirectoryHistory"
             @click="onLoadLastFolder"
         >前回のフォルダを開く</button>
         <button
@@ -176,15 +192,19 @@ let directoryReadable = { //mixin
     mixins: [historySavable],
     data: function () {
         return {
+            hasDirectoryHistory: true,
             openingDirectory: null,
             indexs: {},
             nextKey: 1,
         };
     },
+    created: async function () {
+        this.hasDirectoryHistory = await this.hasLastLoadedDirectory();
+    },
     methods: {
         onLoadDirectory: async function (e) {
             this.fileList = [];
-            let directoryHandle = e.directoryHandle;
+            let directoryHandle = e;
             this.openingDirectory = directoryHandle;
             this.saveLastLoadedDirectory(directoryHandle);
             let indexsHistory = await this.getIndexs(directoryHandle);
@@ -244,6 +264,8 @@ let directoryReadable = { //mixin
                 resolve(fileList);
             });
             this.saveIndexs(directoryHandle, indexs);
+            this.hasDirectoryHistory = true;
+            this.$emit('change-history', { hasDirectoryHistory: true, hasIndexsHistories: true });
         },
     },
 };
@@ -271,6 +293,7 @@ let panelsDraggable = { //mixin
                 that.indexs[val.name] = idx;
             });
             this.saveIndexs(this.openingDirectory, this.indexs);
+            this.$emit('change-history', { hasDirectoryHistory: true, hasIndexsHistories: true });
         }
     }
 };
@@ -485,9 +508,9 @@ let Bgm = { //component
     mixins: [directoryReadable, panelsDraggable],
     data: function () {
         return {
-            dirKey: 'bgm',             //const
-            fadeOutKey: 'bgm-fadeout', //const
-            idxsKey: 'bgm-indexs',     //const
+            dirKey: bgm_dirKey,
+            idxsKey: bgm_idxsKey,
+            fadeOutKey: bgm_fadeOutKey,
             //key==0: 再生中のplayer無し
             // key>0: keyに一致するplayerが再生中
             // key<0: -keyに一致するplayerがフェードアウト中
@@ -532,7 +555,7 @@ let Bgm = { //component
         <h2>BGM</h2>
         <div class="setting">
             <DirectoryReader
-                :dirKey="dirKey" :idxsKey="idxsKey"
+                :dirKey="dirKey" :hasDirectoryHistory="hasDirectoryHistory"
                 @load-directory="onLoadDirectory"
             ></DirectoryReader>
             <div class="fadeout">
@@ -655,15 +678,15 @@ let Se = { //component
     mixins: [directoryReadable, panelsDraggable],
     data: function () {
         return {
-            dirKey: 'se',         //const
-            idxsKey: 'se-indexs', //const
+            dirKey: se_dirKey,
+            idxsKey: se_idxsKey,
             fileList: [],
         };
     },
     template: `<div id="se">
         <h2>SE</h2>
         <DirectoryReader
-            :dirKey="dirKey" :idxsKey="idxsKey"
+            :dirKey="dirKey" :hasDirectoryHistory="hasDirectoryHistory"
             @load-directory="onLoadDirectory"
         ></DirectoryReader>
         <draggable v-model="fileList" v-bind="dragOptions" @end="onEnd">
@@ -678,6 +701,7 @@ let Se = { //component
 };
 
 $(document).ready(function () {
+    //アプリをインスタンス化
     new Vue({
         el: '#app',
         name: 'App',
@@ -685,8 +709,44 @@ $(document).ready(function () {
             Bgm,
             Se,
         },
+        data: {
+            hasDirectoryHistory: true,
+            hasIndexsHistories: true,
+        },
+        created: async function () {
+            if (await getDataFromDatabase(bgm_dirKey) === null && await getDataFromDatabase(se_dirKey) === null) {
+                this.hasDirectoryHistory = false;
+            }
+            if (await getDataFromDatabase(bgm_idxsKey) === null && await getDataFromDatabase(se_idxsKey) === null) {
+                this.hasIndexsHistories = false;
+            }
+        },
+        methods: {
+            onChangeHistory: function (e) {
+                this.hasDirectoryHistory = e.hasDirectoryHistory;
+                this.hasIndexsHistories = e.hasIndexsHistories;
+            },
+            onLoadLastFolder: async function (e) {
+                if (await getDataFromDatabase(bgm_dirKey) !== null) {
+                    $('#bgm .load-last-folder').trigger('click');
+                }
+                if (await getDataFromDatabase(se_dirKey) !== null) {
+                    $('#se .load-last-folder').trigger('click');
+                }
+            },
+            onDeleteIndexsHistories: function (e) {
+                let deleteRequest = window.confirm('履歴を削除してもよろしいですか?');
+                if (deleteRequest) {
+                    deleteDataFromDatabase(bgm_idxsKey);
+                    deleteDataFromDatabase(se_idxsKey);
+                    window.alert('履歴を削除しました。');
+                    this.hasIndexsHistories = false;
+                }
+            },
+        },
     });
 
+    //画像のプレロード
     new Vue({
         el: '#preload',
         name: 'Preload',
