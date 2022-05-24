@@ -44,7 +44,7 @@ function saveDataToDatabase(key, value) { //async
         };
     });
 }
-function loadDataFromDatabase(key) { //async
+function getDataFromDatabase(key) { //async
     return new Promise(async (resolve, reject) => {
         if (!database) {
             database = await getDatabase(databaseName);
@@ -70,6 +70,47 @@ function loadDataFromDatabase(key) { //async
 }
 
 
+let historySavable = { //mixin
+    data: function () {
+        return {
+            dirKey: '',
+            idxsKey: '',
+            indexsHistories: [],
+            openingDirectory: null,
+        };
+    },
+    created: async function () {
+        this.indexsHistories = await getDataFromDatabase(this.idxsKey);
+        if (this.indexsHistories === null) {
+            this.indexsHistories = [];
+        }
+    },
+    methods: {
+        saveLastLoadedDirectory: function (directoryHandle) {
+            saveDataToDatabase(this.dirKey, directoryHandle);
+        },
+        getIndexs: async function (directoryHandle) {
+            for (let x of this.indexsHistories) {
+                if (await directoryHandle.isSameEntry(x.directory)) {
+                    return x.indexs;
+                }
+            }
+            return { num: 0 };
+        },
+        saveIndexs: async function (directoryHandle, indexs) {
+            for (let x of this.indexsHistories) {
+                if (await directoryHandle.isSameEntry(x.directory)) {
+                    x.indexs = indexs;
+                    saveDataToDatabase(this.idxsKey, this.indexsHistories);
+                    return;
+                }
+            }
+            this.indexsHistories.push({ directory: directoryHandle, indexs });
+            saveDataToDatabase(this.idxsKey, this.indexsHistories);
+        },
+    },
+};
+
 let DirectoryReader = { //component
     props: {
         dirKey: {
@@ -87,7 +128,7 @@ let DirectoryReader = { //component
         };
     },
     created: async function () {
-        if (await loadDataFromDatabase(this.dirKey)) {
+        if (await getDataFromDatabase(this.dirKey)) {
             this.hasHistory = true;
         }
         else {
@@ -96,8 +137,8 @@ let DirectoryReader = { //component
     },
     methods: {
         onLoadLastFolder: async function (e) {
-            let directoryHandle = await loadDataFromDatabase(this.dirKey);
-            let indexsHistory = await loadDataFromDatabase(this.idxsKey);
+            let directoryHandle = await getDataFromDatabase(this.dirKey);
+            let indexsHistory = await getDataFromDatabase(this.idxsKey);
             if (await directoryHandle.queryPermission(mode) !== 'granted' && await directoryHandle.requestPermission(mode) !== 'granted') {
                 console.log('loading "' + directoryHandle.name + '" was rejected.');
                 return;
@@ -127,19 +168,24 @@ let directoryReadable = { //mixin
     components: {
         DirectoryReader,
     },
+    mixins: [historySavable],
     data: function () {
         return {
+            openingDirectory: null,
             indexs: {},
             nextKey: 1,
         };
     },
     methods: {
         onLoadDirectory: async function (e) {
+            this.fileList = [];
             let directoryHandle = e.directoryHandle;
-            let indexsHistory = e.indexsHistory;
+            this.openingDirectory = directoryHandle;
+            this.saveLastLoadedDirectory(directoryHandle);
+            let indexsHistory = await this.getIndexs(directoryHandle);
             if (this.playingKey > 0) {
                 this.playingKey = 0;
-                this.reqestedKey = 0;
+                this.requestedKey = 0;
             }
             let indexs = {};
             this.fileList = await new Promise(async (resolve, reject) => {
@@ -192,7 +238,7 @@ let directoryReadable = { //mixin
                 });
                 resolve(fileList);
             });
-            saveDataToDatabase(this.idxsKey, indexs);
+            this.saveIndexs(directoryHandle, indexs);
         },
     },
 };
@@ -201,6 +247,7 @@ let panelsDraggable = { //mixin
     components: {
         draggable,
     },
+    mixins: [historySavable],
     data: function () {
         return {
             indexs: {},
@@ -218,7 +265,7 @@ let panelsDraggable = { //mixin
             $.each(this.fileList, function (idx, val) {
                 that.indexs[val.name] = idx;
             });
-            saveDataToDatabase(this.idxsKey, this.indexs);
+            this.saveIndexs(this.openingDirectory, this.indexs);
         }
     }
 };
@@ -446,7 +493,7 @@ let Bgm = { //component
         };
     },
     created: async function () {
-        let request = await loadDataFromDatabase(this.fadeOutKey);
+        let request = await getDataFromDatabase(this.fadeOutKey);
         if (request === null) {
             this.fadeOutDuration = 1000;
         }
