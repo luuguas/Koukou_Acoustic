@@ -524,6 +524,7 @@ let Bgm = { //component
         let request = await getDataFromDatabase(this.fadeOutKey);
         if (request === null) {
             this.fadeOutDuration = 1000;
+            saveDataToDatabase(this.fadeOutKey, 1000);
         }
         else {
             this.fadeOutDuration = request;
