@@ -1,99 +1,66 @@
-README.md - ***Ver1.1.0 (Pre-Release)***
+README.md - ***Ver2.0.0***
 
-<br>
-
-# Koukou_Acoustic
+# Koukou_Acoustic - 演劇用音響機材
 Web Application of Acoustic Equipment for Play
 
-劇で使える音響用のWebアプリ 
+演劇に使える音響用のWebアプリケーション
+
+## 注意
+このアプリはPC版ChromeとMicrosoft Edgeのみに対応しています。他のブラウザはサポート対象外です。
+
+# 起動
+[https://luuguas.github.io/Koukou_Acoustic/](https://luuguas.github.io/Koukou_Acoustic/) から起動できます。
+オフラインで使用したい場合は、下記「オフラインで使用する」を参照してください。
 
 # 使い方
+## 共通操作
+### フォルダを開く
+BGM・SE各々について、[フォルダを開く...]ボタンを押してフォルダを選択すると、選択したフォルダの直下にある音声ファイルを読み込みます。
 
-## ダウンロード
-[Releasesページ](https://github.com/luuguas/Koukou_Acoustic/releases)に移動し、Assets内の Source Code (zip) をクリックすると圧縮ファイルがダウンロードされるので、解凍してください。
+[前回のフォルダを開く]ボタンを押すと、前回開いたフォルダを再び読み込むことが出来ます。 [(一括)前回のフォルダを開く]ボタンでは、BGM・SEの前回開いたフォルダを一括で再読み込みします。
 
-[ここ](https://github.com/luuguas/Koukou_Acoustic/archive/refs/tags/v1.1.0.zip)から直接ダウンロードもできます。
+![open folder](doc/OpenFolder.png)
 
-![download](https://user-images.githubusercontent.com/69027878/120668504-7c6e3500-c4c9-11eb-93ba-4c1cb168bda7.png)
+### プレーヤーの並び替え
+音声ファイルを読み込むと、以下のようにプレーヤーが表示されます。プレーヤー右側の三本線をドラッグすることで、プレーヤーを並び替えることが出来ます。
 
-## 起動
-index.htmlをブラウザで開きます。
+![reorder players](doc/Reorder.png)
 
-Chrome及びMicrosoft Edgeでは動作を確認しています。他のブラウザはサポート対象外です。<br>
+プレーヤーの並び順はブラウザに保存され、再びフォルダを開いた際に自動的に前回の並び順に整列されます。並び順の履歴を削除したい場合は、[並び替え履歴を削除する]ボタンを押してください。
 
-![open](https://user-images.githubusercontent.com/69027878/120658295-424c6580-c4c0-11eb-9c9a-9923c2bbeec1.png)
+![delete history of order](doc/DeleteOrderHistory.png)
 
-## アプリの操作
-### BGM
-再生ボタンを押すと再生します。シークバーをドラッグすると再生時間を変更できます。
+## BGM
+プレーヤー左側の再生ボタンを押すと再生します。シークバーをドラッグすると再生時間を変更できます。
 
-既にBGMを再生しているときにそのBGMを一時停止する時や、他のBGMを再生するときは、現在再生中のBGMの音量がフェードアウトしてから切り替わります。
-フェードアウト中は再生ボタンは操作できません。
+![play and change current time](doc/PlayBGMAndChangeCurrentTime.png)
 
-BGMが終了間近になった時も自動でフェードアウトします。
+既にプレーヤーを再生している途中で、そのプレーヤーを一時停止したり、他のプレーヤーの再生ボタンを押したりした時は、現在再生中のプレーヤーの音量がフェードアウトして(徐々に小さくなって)から切り替わります。
 
-![bgm](https://user-images.githubusercontent.com/69027878/120659264-29907f80-c4c1-11eb-8056-149d6c4d637e.png)
+#### 再生中
+![playing](doc/Playing.png)
 
-### 効果音(SE)
+↓
+
+#### フェードアウト中
+![fading](doc/Fading.png)
+
+再生中のプレーヤーの音楽が終了間近になった時も、自動でフェードアウトします。 フェードアウト中は、再生ボタン及びシークバーは操作できません。フェードアウトにかかる時間は、[一時停時のフェードアウト]から設定できます。
+
+![set fadeout duration](doc/SetFadeOutDuration.png)
+
+## SE(効果音)
 クラッカーのボタンを押すと効果音が再生されます。同時に5回まで再生できます。
 
 効果音を途中で止めたいときは停止ボタンをクリックしてください。停止ボタンは再生開始の早い順に並んでいます。
 
-![se](https://user-images.githubusercontent.com/69027878/120660248-19c56b00-c4c2-11eb-992b-0f79a1e697b8.png)
+![play SE and stop](doc/PlaySEAndStop.png)
 
-## 音の変更
-### 音楽ファイルの移動
-musicフォルダ内にはBGMフォルダとSEフォルダがあります。
+# オフラインで使用する
+[Releases](https://github.com/luuguas/Koukou_Acoustic/releases/tag/v2.0.0)ページに移動し、Assetsを開いて [Source Code (zip)] をクリックすると、圧縮ファイルがダウンロードされますので、解凍してください。 直接ダウンロードする場合は[こちら](https://github.com/luuguas/Koukou_Acoustic/archive/refs/tags/v2.0.0.zip)をクリック。
 
-BGMフォルダ直下にBGMとして使う音楽ファイルを、SEフォルダ直下に効果音として使う音楽ファイルをそれぞれ移動してください。必要のないファイルはフォルダ内から削除してしまって構いません。
+![Download](doc/Download.png)
 
-※可変ビットレート(VBR)形式の音楽ファイルでは再生を中断した際に再び再生することが出来ません。固定ビットレート(CBR)形式の音楽ファイルを指定してください。
+解凍したら、フォルダ直下の index.html をブラウザで開いてください。
 
-![music](https://user-images.githubusercontent.com/69027878/120661567-5d6ca480-c4c3-11eb-8ed6-afc8328f1a4d.png)
-
-↓
-
-![sef](https://user-images.githubusercontent.com/69027878/120661634-6b222a00-c4c3-11eb-8a20-228d52ec786a.png)
-
-↓
-
-![inse](https://user-images.githubusercontent.com/69027878/120661673-7412fb80-c4c3-11eb-945f-82fd864c36ee.png)
-
-### 音楽ファイルをアプリに適用
-script.jsを[編集(E)]で開いてください。
-
-![js](https://user-images.githubusercontent.com/69027878/120662182-e2f05480-c4c3-11eb-87ef-25ee2e3f8a52.png)
-
-メモ帳が表示されたら、音声ファイルが指定されている箇所に移動します。(87行~)
-
-```javascript
-new Vue({
-    el: '#bgm',
-    data: {
-        fileNames: [
-            'タイムスリップ.mp3',
-            'BGM平安2.mp3',
-            'BGM平安貴族.mp3',
-            'Black Magic1.mp3',
-            'BGM日常現代.mp3',
-        ]
-    },    
-    ...
-    });
-    new Vue({
-        el: '#se',
-        data: {
-            fileNames: [
-                'スマホのタップ音.mp3',
-                'アラーム.mp3',
-                'ドア現代.mp3',
-                '走る.mp3',
-                ...
-            ]
-        },
-        ...
-    });
-```
-と音声ファイルの名前がリストアップされているので、その箇所を編集し、適用させたい音楽ファイルのファイル名を` '(ファイル名)', `の形式で指定します。(拡張子を含む)
-
-BGMは`el: '#bgm'`直下のリスト、効果音は`el: '#se'`直下のリストを編集して適用させます。その他のコードは書き換えないでください。
+![use offline](doc/Offline.png)
