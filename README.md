@@ -57,7 +57,7 @@ BGM・SE各々について、[フォルダを開く...]ボタンを押してフ�
 ![play SE and stop](doc/PlaySEAndStop.png)
 
 # オフラインで使用する
-[Releases](https://github.com/luuguas/Koukou_Acoustic/releases/tag/v2.0.0)ページに移動し、Assetsを開いて [Source Code (zip)] をクリックすると、圧縮ファイルがダウンロードされますので、解凍してください。 直接ダウンロードする場合は[こちら](https://github.com/luuguas/Koukou_Acoustic/archive/refs/tags/v2.0.0.zip)をクリック。
+[Releases](https://github.com/luuguas/Koukou_Acoustic/releases/tag/v2.0.0)ページに移動し、Assetsを開いて [Source code (zip)] をクリックすると、圧縮ファイルがダウンロードされますので、解凍してください。 直接ダウンロードする場合は[こちら](https://github.com/luuguas/Koukou_Acoustic/archive/refs/tags/v2.0.0.zip)をクリック。
 
 ![Download](doc/Download.png)
 
